@@ -1,11 +1,11 @@
 import './Header.css';
 import Nav from './Nav';
 
-function Header () {
+function Header({setPage}) {
   return (
     <header>
       <h2>Library Management System</h2>
-        <Nav />
+        <Nav setPage={setPage}/>
     </header>
   )
 }
