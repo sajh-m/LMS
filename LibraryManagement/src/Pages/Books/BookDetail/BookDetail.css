@@ -116,3 +116,18 @@
   background: var(--stamp);
   color: var(--paper);
 }
+.donate-form-errors {
+  background: #fbeceb;
+  border: 1px solid var(--stamp);
+  border-radius: 2px;
+  padding: 0.75rem 1rem;
+  margin: 0 0 1rem;
+  list-style: none;
+}
+
+.donate-form-errors li {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--stamp-dark);
+  line-height: 1.5;
+}
