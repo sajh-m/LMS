@@ -12,6 +12,7 @@ import {
   createBook,
   updateBook,
   deleteBook,
+  takeBook,
 } from "../controllers/bookController.js";
 
 const router = express.Router();
@@ -21,5 +22,6 @@ router.get("/:id", idParamValidator, validate, asyncHandler(getBookById));
 router.post("/", createBookValidator, validate, asyncHandler(createBook));
 router.put("/:id", updateBookValidator, validate, asyncHandler(updateBook));
 router.delete("/:id", idParamValidator, validate, asyncHandler(deleteBook));
+router.post("/:id/take", idParamValidator, validate, asyncHandler(takeBook));
 
 export default router;

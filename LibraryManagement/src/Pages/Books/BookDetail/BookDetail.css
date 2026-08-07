@@ -131,3 +131,20 @@
   color: var(--stamp-dark);
   line-height: 1.5;
 }
+.book-detail-stock {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--brass);
+  margin: 0.75rem 0;
+}
+
+.book-detail-stock.out-of-stock {
+  color: var(--stamp);
+}
+
+.take-btn:disabled {
+  background: #8a8477;
+  cursor: default;
+}

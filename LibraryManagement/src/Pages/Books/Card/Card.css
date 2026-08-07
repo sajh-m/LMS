@@ -76,3 +76,20 @@
   color: var(--stamp);
   font-weight: 700;
 }
+.card-cover {
+  position: relative;
+}
+
+.card-stock-badge {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  background: var(--stamp);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.5rem;
+  border-radius: 2px;
+}

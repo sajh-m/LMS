@@ -1,6 +1,8 @@
 import './Card.css';
 
-function Card({ title, author, description, image, onClick }) {
+function Card({ title, author, description, image, stock, onClick }) {
+  const outOfStock = stock <= 0;
+
   const handleKeyDown = (e) => {
     if (onClick && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault();
@@ -21,6 +23,7 @@ function Card({ title, author, description, image, onClick }) {
           src={image || 'https://placehold.co/300x400?text=No+Cover'}
           alt={`Cover of ${title}`}
         />
+        {outOfStock && <span className="card-stock-badge">Out of Stock</span>}
       </div>
       <h3>{title}</h3>
       <p><strong>Author:</strong> {author}</p>

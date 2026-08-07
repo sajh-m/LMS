@@ -15,6 +15,12 @@ export const createBookValidator = [
   body("description").optional().trim(),
 
   body("image").optional().trim().isURL().withMessage("image must be a valid URL"),
+
+  body("stock")
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage("stock must be a whole number of 0 or more")
+    .toInt(),
 ];
 
 export const updateBookValidator = [
@@ -29,6 +35,12 @@ export const updateBookValidator = [
   body("description").optional().trim(),
 
   body("image").optional().trim().isURL().withMessage("image must be a valid URL"),
+
+  body("stock")
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage("stock must be a whole number of 0 or more")
+    .toInt(),
 ];
 
 export const idParamValidator = [

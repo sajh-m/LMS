@@ -27,4 +27,12 @@ export const Book = sequelize.define("Book", {
     type: DataTypes.STRING,
     allowNull: true,
   },
+  stock: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1,
+    validate: {
+      min: 0,
+    },
+  },
 });
