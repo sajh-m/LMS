@@ -1,3 +1,48 @@
-.About {
-    float: left;
+.about-page {
+  padding: 1.5rem 2rem;
+  max-width: 34rem;
+}
+
+.about-lead {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: #4a453e;
+  margin: 1rem 0 2rem;
+}
+
+/* catalog-card treatment for the contact info, matching Card/DonateForm */
+.about-record {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 1.1rem 1.5rem;
+  box-shadow: 3px 3px 0 var(--paper-shadow);
+}
+
+.about-record-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--stamp);
+  font-weight: 700;
+}
+
+.about-record-value {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+  width: fit-content;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.about-record-value:hover {
+  color: var(--stamp);
+  border-color: var(--brass);
 }
