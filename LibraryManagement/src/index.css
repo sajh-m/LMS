@@ -1,0 +1,11 @@
+:root {
+  --ink: #201d1a;
+  --paper: #faf6ec;
+  --paper-shadow: #e8e0cc;
+  --line: #d9d0b8;
+  --stamp: #9c3b2e;
+  --stamp-dark: #7a2d22;
+  --brass: #b8905a;
+  --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+  --font-mono: 'Courier New', ui-monospace, SFMono-Regular, monospace;
+}

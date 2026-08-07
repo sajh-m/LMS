@@ -1,14 +1,13 @@
 import './Header.css';
 import Nav from './Nav';
 
-function Header({setPage}) {
+function Header({ setPage, currentPage }) {
   return (
     <header>
       <h2>Library Management System</h2>
-        <Nav setPage={setPage}/>
+      <Nav setPage={setPage} currentPage={currentPage} />
     </header>
   )
 }
-
 
 export default Header

@@ -1,0 +1,118 @@
+.book-detail {
+  padding: 0.5rem 0 2rem;
+}
+
+.back-link {
+  background: none;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b6355;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 1.5rem;
+}
+
+.back-link:hover {
+  color: var(--stamp);
+}
+
+.book-detail-body {
+  display: flex;
+  gap: 2.5rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 2rem;
+  max-width: 42rem;
+  box-shadow: 4px 4px 0 var(--paper-shadow);
+}
+
+.book-detail-cover {
+  width: 12rem;
+  height: 16rem;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+.book-detail-info h1 {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  margin: 0 0 0.75rem;
+  color: var(--ink);
+}
+
+.book-detail-author {
+  font-size: 0.9rem;
+  margin: 0.25rem 0;
+}
+
+.book-detail-author strong {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--stamp);
+}
+
+.book-detail-genre {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid var(--brass);
+  color: var(--brass);
+  padding: 0.2rem 0.6rem;
+  border-radius: 2px;
+  margin: 0.5rem 0 1rem;
+}
+
+.book-detail-description {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #4a453e;
+  margin: 0.75rem 0 1.75rem;
+}
+
+.book-detail-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.take-btn {
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  padding: 0.65rem 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.take-btn:disabled {
+  background: #8a8477;
+  cursor: default;
+}
+
+.donate-more-btn {
+  background: transparent;
+  color: var(--stamp);
+  border: 1px solid var(--stamp);
+  padding: 0.65rem 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.donate-more-btn:hover {
+  background: var(--stamp);
+  color: var(--paper);
+}

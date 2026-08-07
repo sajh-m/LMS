@@ -1,0 +1,42 @@
+.books-page {
+  padding: 1.5rem 2rem;
+}
+
+.books-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.card-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.donate-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--stamp);
+  color: var(--paper);
+  border: none;
+  border-radius: 2px;
+  padding: 0.65rem 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.donate-toggle-btn:hover {
+  background: var(--stamp-dark);
+}
+
+.donate-toggle-icon {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  line-height: 1;
+}

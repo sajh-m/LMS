@@ -1,0 +1,88 @@
+.donate-form {
+  background: var(--paper);
+  border: 1px dashed var(--brass);
+  border-radius: 2px;
+  padding: 2rem;
+  max-width: 24rem;
+  margin: 1.5rem 0;
+}
+
+.donate-form h2 {
+  font-family: var(--font-display);
+  margin-top: 0;
+}
+
+.donate-form label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b6355;
+  margin-top: 1rem;
+  margin-bottom: 0.35rem;
+}
+
+.donate-form input,
+.donate-form select,
+.donate-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 0.55rem 0.6rem;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  background: #fff;
+}
+
+.donate-form textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.donate-form input:focus,
+.donate-form select:focus,
+.donate-form textarea:focus {
+  outline: 2px solid var(--brass);
+  outline-offset: 1px;
+}
+
+.donate-form-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.donate-submit-btn {
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  padding: 0.6rem 1.1rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.donate-cancel-btn {
+  background: transparent;
+  color: var(--stamp);
+  border: 1px solid var(--stamp);
+  padding: 0.6rem 1.1rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.donate-submit-btn:hover {
+  background: var(--stamp-dark);
+}
+
+.donate-cancel-btn:hover {
+  background: var(--stamp);
+  color: var(--paper);
+}

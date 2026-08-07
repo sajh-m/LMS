@@ -1,7 +1,8 @@
+import './index.css'
 import Header from './Header/Header'
-import About from './About/About'
+import About from './Pages/About/About'
 import {useState} from 'react'
-import Card from './Card/Card'
+import Books from './Pages/Books/Books'
 import Contact from './Contact/Contact'
 
 function App() {
@@ -11,7 +12,7 @@ const [page, setPage] = useState('About')
     <>
       <Header setPage={setPage}/>
       {page === 'About' && <About />}
-      {page === 'Books' && <Card title="Glory" author='Me' description='The best book in town'/>}
+      {page === 'Books' && <Books />}
       {page === 'Contact' && <Contact />}
       
     </>
