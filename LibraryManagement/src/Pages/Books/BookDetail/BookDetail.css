@@ -148,3 +148,32 @@
   background: #8a8477;
   cursor: default;
 }
+.reservation-box {
+  background: #fff;
+  border: 1px solid var(--brass);
+  border-radius: 2px;
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+}
+
+.reservation-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--stamp);
+  margin-bottom: 0.5rem;
+}
+
+.cancel-reservation-btn {
+  margin-top: 0.75rem;
+  background: transparent;
+  color: var(--stamp);
+  border: 1px solid var(--stamp);
+  padding: 0.5rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+}

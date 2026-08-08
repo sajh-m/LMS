@@ -1,0 +1,74 @@
+.auth-page {
+  padding: 1.5rem 2rem;
+}
+
+.auth-form {
+  background: var(--paper);
+  border: 1px dashed var(--brass);
+  border-radius: 2px;
+  padding: 2rem;
+  max-width: 22rem;
+  margin-top: 1.5rem;
+}
+
+.auth-form label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b6355;
+  margin-top: 1rem;
+  margin-bottom: 0.35rem;
+}
+
+.auth-form label:first-of-type { margin-top: 0; }
+
+.auth-form input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 0.55rem 0.6rem;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  background: #fff;
+}
+
+.auth-submit-btn {
+  margin-top: 1.5rem;
+  width: 100%;
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  padding: 0.65rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.auth-error, .auth-error-list {
+  background: #fbeceb;
+  border: 1px solid var(--stamp);
+  border-radius: 2px;
+  padding: 0.6rem 0.9rem;
+  margin: 0 0 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--stamp-dark);
+  list-style: none;
+}
+
+.auth-switch {
+  margin-top: 1.25rem;
+  font-size: 0.85rem;
+  color: #6b6355;
+}
+
+.auth-switch a {
+  color: var(--stamp);
+  cursor: pointer;
+  text-decoration: underline;
+}

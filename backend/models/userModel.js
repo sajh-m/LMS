@@ -1,30 +1,28 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database.js";
 
-export const Book = sequelize.define("Book", {
+export const User = sequelize.define("User", {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
   },
-  title: {
+  name: {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  author: {
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+    validate: { isEmail: true },
+  },
+  phone: {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  genre: {
+  passwordHash: {
     type: DataTypes.STRING,
-    allowNull: true,
-  },
-  description: {
-    type: DataTypes.TEXT,
-    allowNull: true,
-  },
-  image: {
-    type: DataTypes.STRING,
-    allowNull: true,
+    allowNull: false,
   },
 });

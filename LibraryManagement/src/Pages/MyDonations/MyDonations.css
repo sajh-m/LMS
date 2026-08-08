@@ -1,0 +1,41 @@
+.my-donations-page { padding: 1.5rem 2rem; }
+
+.donation-list { margin-top: 1.5rem; max-width: 34rem; }
+
+.donation-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.donation-status {
+  display: inline-block;
+  margin-left: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 2px;
+  color: var(--paper);
+  background: var(--brass);
+}
+
+.donation-status.reserved { background: var(--stamp); }
+
+.complete-btn {
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  padding: 0.5rem 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+}

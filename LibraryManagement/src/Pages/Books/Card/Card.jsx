@@ -20,7 +20,7 @@ function Card({ title, author, description, image, stock, onClick }) {
     >
       <div className="card-cover">
         <img
-          src={image || 'https://placehold.co/300x400?text=No+Cover'}
+          src={image ? `http://localhost:3001${image}` : 'https://placehold.co/300x400?text=No+Cover'}
           alt={`Cover of ${title}`}
         />
         {outOfStock && <span className="card-stock-badge">Out of Stock</span>}

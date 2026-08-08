@@ -2,7 +2,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  width: 15rem;
+  width: 14rem;
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: 2px;
