@@ -1,7 +1,8 @@
 import { BookService } from "../services/bookService.js";
 
 export async function getBooks(req, res) {
-  res.json(await BookService.getAllBooks());
+  const { title, author, genre, location, donorName } = req.query;
+  res.json(await BookService.getAllBooks({ title, author, genre, location, donorName }));
 }
 
 export async function getBookById(req, res) {
@@ -91,9 +92,13 @@ export async function cancelReservation(req, res) {
 }
 
 export async function getMyDonations(req, res) {
-  res.json(await BookService.getMyDonations(req.userId));
+  const { title, author, genre, location } = req.query;
+  res.json(await BookService.getMyDonations(req.userId, { title, author, genre, location }));
 }
 
 export async function getMyReservation(req, res) {
-  res.json(await BookService.getMyReservation(req.userId));
+  const { title, author, genre, location, donorName } = req.query;
+  res.json(
+    await BookService.getMyReservation(req.userId, { title, author, genre, location, donorName }),
+  );
 }

@@ -6,6 +6,7 @@ import Books from './Pages/Books/Books'
 import Login from './Pages/Login/Login'
 import Register from './Pages/Register/Register'
 import MyDonations from './Pages/MyDonations/MyDonations'
+import MyReservations from './Pages/MyReservations/MyReservations'
 import Toast from './Toast/Toast'
 import { auth } from './api'
 
@@ -34,6 +35,7 @@ function App() {
       {page === 'About' && <About />}
       {page === 'Login' && <Login setPage={setPage} onLoggedIn={handleLoggedIn} />}
       {page === 'Register' && <Register setPage={setPage} onLoggedIn={handleLoggedIn} />}
+      {page === 'MyReservations' && <MyReservations />}
       {page === 'MyDonations' && <MyDonations />}
       <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} />
     </>

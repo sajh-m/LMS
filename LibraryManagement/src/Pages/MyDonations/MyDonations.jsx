@@ -1,21 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { api } from '../../api';
+import FilterBar from '../../FilterBar/FilterBar';
 import './MyDonations.css';
 
 function MyDonations() {
   const [donations, setDonations] = useState([]);
-  const [loading, setLoading] = useState(true); // starts true - no need to set it inside load()
+  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({});
 
-  const load = () => {
-    api.getMyDonations().then(setDonations).finally(() => setLoading(false));
-  };
+  const load = useCallback((f = filters) => {
+    api.getMyDonations(f).then(setDonations).finally(() => setLoading(false));
+  }, [filters]);
 
   useEffect(() => {
-    load();
-  }, []);
+    const handle = setTimeout(() => load(filters), 300);
+    return () => clearTimeout(handle);
+  }, [filters, load]);
 
-  const handleComplete = async (donationId) => {
-    await api.completeDonation(donationId);
+  const handleRemove = async (id) => {
+    await api.deleteBook(id);
     load();
   };
 
@@ -23,29 +26,28 @@ function MyDonations() {
     <div className="my-donations-page">
       <h1 className="Page-title">My Donations</h1>
 
-      {loading && <p>Loading…</p>}
+      <FilterBar filters={filters} onChange={setFilters} showDonorFilter={false} />
 
-      {!loading && donations.length === 0 && (
-        <p>You haven't donated any books yet.</p>
-      )}
+      {loading && <p>Loading…</p>}
+      {!loading && donations.length === 0 && <p>No donations match your filters.</p>}
 
       <div className="donation-list">
         {donations.map((d) => (
           <div className="donation-row" key={d.id}>
-  <div>
-    <strong>{d.title}</strong> by {d.author}
-    <span className={`donation-status ${d.status}`}>{d.status}</span>
-    {d.status === 'reserved' && d.borrower && (
-      <div className="borrower-contact">
-        <p>Reserved by <strong>{d.borrower.name}</strong></p>
-        <p>{d.borrower.email} · {d.borrower.phone}</p>
-      </div>
-    )}
-  </div>
-  <button className="complete-btn" onClick={() => handleComplete(d.id)}>
-    Book Given
-  </button>
-</div>
+            <div>
+              <strong>{d.title}</strong> by {d.author}
+              <span className={`donation-status ${d.status}`}>{d.status}</span>
+              {d.status === 'reserved' && d.borrower && (
+                <div className="borrower-contact">
+                  <p>Reserved by <strong>{d.borrower.name}</strong></p>
+                  <p>{d.borrower.email} · {d.borrower.phone}</p>
+                </div>
+              )}
+            </div>
+            <button className="complete-btn" onClick={() => handleRemove(d.id)}>
+              {d.status === 'reserved' ? 'Book Given' : 'Remove Listing'}
+            </button>
+          </div>
         ))}
       </div>
     </div>

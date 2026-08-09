@@ -168,3 +168,26 @@
   color: var(--brass);
   margin: 0.75rem 0;
 }
+.own-book-note {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #6b6355;
+  margin-bottom: 0.75rem;
+}
+
+.remove-btn {
+  background: var(--stamp);
+  color: var(--paper);
+  border: none;
+  padding: 0.65rem 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.remove-btn:disabled {
+  background: #8a8477;
+  cursor: default;
+}

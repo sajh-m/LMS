@@ -36,7 +36,7 @@ export const api = {
       body: JSON.stringify(payload),
     }),
 
-  getBooks: () => request("/books"),
+  getBooks: (filters) => request(`/books${toQueryString(filters)}`),
 
   donateBook: (formData) =>
     request("/books", { method: "POST", body: formData }),
@@ -50,8 +50,11 @@ export const api = {
 
   cancelReservation: (id) => request(`/books/${id}/cancel`, { method: "POST" }),
 
-  getMyDonations: () => request("/books/mine/donated"),
-  getMyReservation: () => request("/books/mine/reserved"),
+  getMyDonations: (filters) =>
+    request(`/books/mine/donated${toQueryString(filters)}`),
+
+  getMyReservation: (filters) =>
+    request(`/books/mine/reserved${toQueryString(filters)}`),
 };
 
 export const auth = {
@@ -70,3 +73,16 @@ export const auth = {
   },
   isLoggedIn: () => !!getToken(),
 };
+
+function toQueryString(params) {
+  const clean = Object.entries(params || {}).filter(
+    ([, v]) => v !== undefined && v !== "",
+  );
+  if (clean.length === 0) return "";
+  return (
+    "?" +
+    clean
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+      .join("&")
+  );
+}

@@ -1,8 +1,6 @@
+import { Op, fn, col, where as sqlWhere } from "sequelize";
 import { Donation, User } from "../models/index.js";
 
-// Fields safe to show on the public browsing list - location is a general
-// area (e.g. "Kathmandu"), not an exact address, so it's fine to show
-// upfront; the donor's name/contact stay hidden until someone takes it.
 const PUBLIC_ATTRIBUTES = [
   "id",
   "title",
@@ -11,23 +9,60 @@ const PUBLIC_ATTRIBUTES = [
   "description",
   "image",
   "location",
+  "donorId",
   "createdAt",
 ];
 
+// Partial, case-insensitive match on a plain column - e.g. "gats" matches
+// "The Great Gatsby". Every filter is independent and optional; passing
+// just one narrows results by that field alone.
+function likeCondition(field, value) {
+  return sqlWhere(fn("lower", col(field)), { [Op.like]: `%${value.trim().toLowerCase()}%` });
+}
+
+// Same idea, but for a column on an included association (e.g. donor.name)
+function likeAssocCondition(alias, field, value) {
+  return sqlWhere(fn("lower", col(`${alias}.${field}`)), {
+    [Op.like]: `%${value.trim().toLowerCase()}%`,
+  });
+}
+
+function buildTextConditions(filters) {
+  const conditions = [];
+  if (filters.title) conditions.push(likeCondition("title", filters.title));
+  if (filters.author) conditions.push(likeCondition("author", filters.author));
+  if (filters.location) conditions.push(likeCondition("location", filters.location));
+  if (filters.genre) conditions.push(likeCondition("genre", filters.genre));
+  return conditions;
+}
+
 export const BookService = {
-  // Only ever shows AVAILABLE copies - once reserved, a listing is
-  // effectively claimed and disappears from public browsing.
-  getAllBooks: () =>
-    Donation.findAll({
-      where: { status: "available" },
+  getAllBooks: (filters = {}) => {
+    const where = { status: "available" };
+    const conditions = buildTextConditions(filters);
+    if (conditions.length > 0) where[Op.and] = conditions;
+
+    const include = [];
+    if (filters.donorName) {
+      include.push({
+        model: User,
+        as: "donor",
+        attributes: [],
+        required: true,
+        where: likeAssocCondition("donor", "name", filters.donorName),
+      });
+    }
+
+    return Donation.findAll({
+      where,
+      include,
       attributes: PUBLIC_ATTRIBUTES,
       order: [["id", "DESC"]],
-    }),
+    });
+  },
 
   getBookById: (id) => Donation.findByPk(id, { attributes: PUBLIC_ATTRIBUTES }),
 
-  // Every donation is a brand new, fully independent entry - no matching
-  // against existing books, even if title+author are identical.
   donateBook: (data, donorId) =>
     Donation.create({
       title: data.title,
@@ -56,9 +91,6 @@ export const BookService = {
     return { status: "ok", entry };
   },
 
-  // This IS the "mark as given" action - deleting the row is the whole
-  // point, whether the donor is withdrawing an unclaimed listing or
-  // confirming a reserved one was physically handed over.
   deleteBook: async (id, requesterId) => {
     const entry = await Donation.findByPk(id);
     if (!entry) return { status: "not_found" };
@@ -68,8 +100,6 @@ export const BookService = {
     return { status: "ok" };
   },
 
-  // Atomic: only succeeds if the row is STILL available at the moment of
-  // the update, so two people can't both claim the same single copy.
   takeBook: async (id, borrowerId) => {
     const entry = await Donation.findByPk(id);
     if (!entry) return { status: "not_found" };
@@ -100,19 +130,31 @@ export const BookService = {
     return { status: "ok" };
   },
 
-  // The donor's own dashboard - includes the borrower's contact details
-  // once someone has reserved it, so the donor can reach out too.
-  getMyDonations: (donorId) =>
-    Donation.findAll({
-      where: { donorId },
+  getMyDonations: (donorId, filters = {}) => {
+    const where = { donorId };
+    const conditions = buildTextConditions(filters);
+    if (conditions.length > 0) where[Op.and] = conditions;
+
+    return Donation.findAll({
+      where,
       include: [{ model: User, as: "borrower", attributes: ["id", "name", "email", "phone"] }],
       order: [["id", "DESC"]],
-    }),
+    });
+  },
 
-  getMyReservation: (borrowerId) =>
-    Donation.findAll({
-      where: { borrowerId, status: "reserved" },
-      include: [{ model: User, as: "donor", attributes: ["id", "name", "email", "phone"] }],
-      order: [["id", "DESC"]],
-    }),
+  getMyReservation: (borrowerId, filters = {}) => {
+    const where = { borrowerId, status: "reserved" };
+    const conditions = buildTextConditions(filters);
+    if (conditions.length > 0) where[Op.and] = conditions;
+
+    const include = [
+      { model: User, as: "donor", attributes: ["id", "name", "email", "phone"] },
+    ];
+    if (filters.donorName) {
+      include[0].required = true;
+      include[0].where = likeAssocCondition("donor", "name", filters.donorName);
+    }
+
+    return Donation.findAll({ where, include, order: [["id", "DESC"]] });
+  },
 };

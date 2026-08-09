@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { auth, api } from '../../api';
+import FilterBar from '../../FilterBar/FilterBar';
 import './Books.css';
 import Card from "./Card/Card";
 import DonateForm from './DonateForm/DonateForm';
@@ -10,12 +11,16 @@ function Books({ setPage, showToast }) {
   const [selectedBook, setSelectedBook] = useState(null);
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({});
 
-  const loadBooks = () => {
-    api.getBooks().then(setBooks).catch(console.error).finally(() => setLoading(false));
-  };
+  const loadBooks = useCallback((f = filters) => {
+    api.getBooks(f).then(setBooks).catch(console.error).finally(() => setLoading(false));
+  }, [filters]);
 
-  useEffect(() => { loadBooks(); }, []);
+  useEffect(() => {
+    const handle = setTimeout(() => loadBooks(filters), 300);
+    return () => clearTimeout(handle);
+  }, [filters, loadBooks]);
 
   const requireLogin = () => {
     if (!auth.isLoggedIn()) {
@@ -46,7 +51,13 @@ function Books({ setPage, showToast }) {
         )}
       </div>
 
+      {view === 'list' && <FilterBar filters={filters} onChange={setFilters} />}
+
       {view === 'list' && loading && <p>Loading books…</p>}
+
+      {view === 'list' && !loading && books.length === 0 && (
+        <p>No books match your filters.</p>
+      )}
 
       {view === 'list' && !loading && (
         <div className="card-grid">
@@ -57,7 +68,7 @@ function Books({ setPage, showToast }) {
               author={book.author}
               description={book.description}
               image={book.image}
-              stock={book.availableCount}
+              location={book.location}
               onClick={() => openDetail(book)}
             />
           ))}
@@ -69,9 +80,7 @@ function Books({ setPage, showToast }) {
           book={selectedBook}
           onBack={backToList}
           requireLogin={requireLogin}
-          onDonateMore={() =>
-            openForm({ title: selectedBook.title, author: selectedBook.author })
-          }
+          onDonateMore={() => openForm({ title: selectedBook.title, author: selectedBook.author })}
         />
       )}
 

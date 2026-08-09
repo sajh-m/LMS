@@ -1,0 +1,40 @@
+.my-reservations-page { padding: 1.5rem 2rem; }
+
+.reservation-list { margin-top: 1.5rem; max-width: 34rem; }
+
+.reservation-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.reservation-location {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--brass);
+  margin: 0.4rem 0;
+}
+
+.donor-contact {
+  font-size: 0.85rem;
+  color: #4a453e;
+  margin-top: 0.4rem;
+}
+
+.cancel-btn {
+  background: transparent;
+  color: var(--stamp);
+  border: 1px solid var(--stamp);
+  padding: 0.5rem 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+}

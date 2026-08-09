@@ -1,15 +1,18 @@
 import { useState } from 'react';
-import { api } from '../../../api';
+import { api, auth } from '../../../api';
 import './BookDetail.css';
 
 function BookDetail({ book, onBack, onDonateMore, requireLogin }) {
-  const [reservation, setReservation] = useState(null); // {donor}
+  const [reservation, setReservation] = useState(null);
   const [taking, setTaking] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const [error, setError] = useState(null);
+
+  const currentUser = auth.getUser();
+  const isOwnBook = currentUser && book.donorId === currentUser.id;
 
   const handleTake = async () => {
     if (!requireLogin()) return;
-
     setTaking(true);
     setError(null);
     try {
@@ -26,6 +29,17 @@ function BookDetail({ book, onBack, onDonateMore, requireLogin }) {
     if (!reservation) return;
     await api.cancelReservation(book.id);
     setReservation(null);
+  };
+
+  const handleRemove = async () => {
+    setRemoving(true);
+    try {
+      await api.deleteBook(book.id);
+      onBack();
+    } catch (err) {
+      setError(err.message);
+      setRemoving(false);
+    }
   };
 
   return (
@@ -45,12 +59,20 @@ function BookDetail({ book, onBack, onDonateMore, requireLogin }) {
           {book.genre && <span className="book-detail-genre">{book.genre}</span>}
 
           <p className="book-detail-location">📍 {book.location}</p>
-
           <p className="book-detail-description">{book.description}</p>
 
           {error && <p className="book-detail-error">{error}</p>}
 
-          {reservation && (
+          {isOwnBook && (
+            <div className="book-detail-actions">
+              <p className="own-book-note">This is your own donation.</p>
+              <button className="remove-btn" onClick={handleRemove} disabled={removing}>
+                {removing ? 'Removing…' : 'Remove Book'}
+              </button>
+            </div>
+          )}
+
+          {!isOwnBook && reservation && (
             <div className="reservation-box">
               <p className="reservation-label">Contact this donor to arrange pickup:</p>
               <p><strong>{reservation.donor.name}</strong></p>
@@ -62,7 +84,7 @@ function BookDetail({ book, onBack, onDonateMore, requireLogin }) {
             </div>
           )}
 
-          {!reservation && (
+          {!isOwnBook && !reservation && (
             <div className="book-detail-actions">
               <button className="take-btn" onClick={handleTake} disabled={taking}>
                 {taking ? 'Reserving…' : 'Take This Book'}
