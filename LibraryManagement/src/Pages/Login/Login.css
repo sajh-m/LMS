@@ -72,3 +72,9 @@
   cursor: pointer;
   text-decoration: underline;
 }
+@media (max-width: 480px) {
+  .auth-form{
+    max-width: 100%;
+    padding: 1.5rem;
+  }
+}

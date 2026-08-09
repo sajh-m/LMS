@@ -1,4 +1,5 @@
 import './index.css'
+import './shared.css'
 import { useState } from 'react'
 import Header from './Header/Header'
 import AdminBooks from './Pages/AdminBooks/AdminBooks'

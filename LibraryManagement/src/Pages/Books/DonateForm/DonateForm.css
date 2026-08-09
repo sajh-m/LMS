@@ -101,3 +101,10 @@
   color: var(--stamp-dark);
   line-height: 1.5;
 }
+
+@media (max-width: 480px) {
+  .donate-form {
+    max-width: 100%;
+    padding: 1.5rem;
+  }
+}

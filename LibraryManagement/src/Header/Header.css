@@ -77,3 +77,52 @@ nav a.active::after {
   transform: scaleX(1);
   background: var(--stamp);
 }
+
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.nav-toggle span {
+  width: 22px;
+  height: 2px;
+  background: var(--paper);
+}
+
+@media (max-width: 768px) {
+  header {
+    flex-wrap: wrap;
+    padding: 1rem 1.25rem;
+  }
+
+  .nav-toggle {
+    display: flex;
+  }
+
+  nav ul {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    gap: 0;
+    margin-top: 1rem;
+  }
+
+  nav ul.nav-open {
+    display: flex;
+  }
+
+  nav ul li {
+    border-top: 1px solid #3a3630;
+  }
+
+  nav a {
+    display: block;
+    padding: 0.85rem 0.25rem;
+  }
+}

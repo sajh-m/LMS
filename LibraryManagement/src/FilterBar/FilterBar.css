@@ -21,3 +21,13 @@
   outline: 2px solid var(--brass);
   outline-offset: 1px;
 }
+@media (max-width: 768px) {
+  .filter-bar {
+    flex-direction: column;
+  }
+
+  .filter-bar input,
+  .filter-bar select {
+    width: 100%;
+  }
+}

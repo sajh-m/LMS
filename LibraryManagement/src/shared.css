@@ -1,17 +1,9 @@
-.books-page {
-  padding: 1.5rem 2rem;
-}
+/* Reusable across any page - not tied to one component */
 
-.books-header {
+.page-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.5rem;
-}
-
-.card-grid {
-  display: flex;
-  flex-wrap: wrap;
 }
 
 .donate-toggle-btn {
@@ -28,7 +20,7 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.1s ease;
+  transition: background 0.15s ease;
 }
 
 .donate-toggle-btn:hover {
@@ -42,11 +34,14 @@
 }
 
 @media (max-width: 768px) {
-  .books-page {
-    padding: 1.25rem 1.25rem;
+  .page-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
   }
 
-  .card-grid {
+  .donate-toggle-btn {
+    width: 100%;
     justify-content: center;
   }
 }
