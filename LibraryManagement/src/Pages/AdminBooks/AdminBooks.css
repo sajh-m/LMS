@@ -1,0 +1,42 @@
+.admin-books-page { padding: 1.5rem 2rem; }
+
+.admin-list { margin-top: 1rem; max-width: 42rem; }
+
+.admin-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.admin-party {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #6b6355;
+  margin: 0.3rem 0;
+}
+
+.admin-row-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.remove-btn {
+  background: var(--stamp);
+  color: var(--paper);
+  border: none;
+  padding: 0.5rem 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+}

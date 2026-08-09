@@ -39,3 +39,8 @@
   text-transform: uppercase;
   cursor: pointer;
 }
+.my-donations-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}

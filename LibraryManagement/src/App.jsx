@@ -1,6 +1,7 @@
 import './index.css'
 import { useState } from 'react'
 import Header from './Header/Header'
+import AdminBooks from './Pages/AdminBooks/AdminBooks'
 import About from './Pages/About/About'
 import Books from './Pages/Books/Books'
 import Login from './Pages/Login/Login'
@@ -31,7 +32,9 @@ function App() {
   return (
     <>
       <Header setPage={setPage} currentPage={page} user={user} onLogout={handleLogout} />
-      {page === 'Books' && <Books setPage={setPage} showToast={showToast} />}
+      
+      {page === 'Books' && <Books setPage={setPage} showToast={showToast} isAdmin={user?.role === 'admin'} />}
+      {page === 'AdminBooks' && user?.role === 'admin' && <AdminBooks />}
       {page === 'About' && <About />}
       {page === 'Login' && <Login setPage={setPage} onLoggedIn={handleLoggedIn} />}
       {page === 'Register' && <Register setPage={setPage} onLoggedIn={handleLoggedIn} />}

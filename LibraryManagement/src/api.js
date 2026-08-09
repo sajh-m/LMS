@@ -55,6 +55,21 @@ export const api = {
 
   getMyReservation: (filters) =>
     request(`/books/mine/reserved${toQueryString(filters)}`),
+
+  adminGetBooks: (filters) => request(`/admin/books${toQueryString(filters)}`),
+
+  adminDeleteBook: (id) => request(`/admin/books/${id}`, { method: "DELETE" }),
+
+  adminCancelReservation: (id) =>
+    request(`/admin/books/${id}/cancel`, { method: "POST" }),
+
+  getNotifications: () => request("/notifications"),
+
+  markNotificationRead: (id) =>
+    request(`/notifications/${id}/read`, { method: "POST" }),
+
+  markAllNotificationsRead: () =>
+    request("/notifications/read-all", { method: "POST" }),
 };
 
 export const auth = {
