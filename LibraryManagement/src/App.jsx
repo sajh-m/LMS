@@ -3,7 +3,6 @@ import { useState } from 'react'
 import Header from './Header/Header'
 import About from './Pages/About/About'
 import Books from './Pages/Books/Books'
-import Contact from './Pages/Contact/Contact'
 import Login from './Pages/Login/Login'
 import Register from './Pages/Register/Register'
 import MyDonations from './Pages/MyDonations/MyDonations'
@@ -29,7 +28,6 @@ function App() {
       <Header setPage={setPage} currentPage={page} user={user} onLogout={handleLogout} />
       {page === 'Books' && <Books setPage={setPage} />}
       {page === 'About' && <About />}
-      {page === 'Contact' && <Contact />}
       {page === 'Login' && <Login setPage={setPage} onLoggedIn={handleLoggedIn} />}
       {page === 'Register' && <Register setPage={setPage} onLoggedIn={handleLoggedIn} />}
       {page === 'MyDonations' && <MyDonations />}
