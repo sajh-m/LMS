@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { api, auth } from '../../api';
 import './Login.css';
 
-function Login({ setPage, onLoggedIn })  {
+function Login({ setPage, onLoggedIn }) {
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -14,7 +14,7 @@ function Login({ setPage, onLoggedIn })  {
     try {
       const data = await api.login(form);
       auth.setSession(data);
-onLoggedIn(data.user);
+      onLoggedIn(data.user);
     } catch (err) {
       setError(err.message);
     } finally {
