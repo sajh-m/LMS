@@ -2,21 +2,21 @@ import { useState } from 'react';
 import { api } from '../../../api';
 import './BookDetail.css';
 
-function BookDetail({ book, onBack, onDonateMore, onTaken }) {
-  const [reservation, setReservation] = useState(null); // {donationId, donor}
+function BookDetail({ book, onBack, onDonateMore, requireLogin }) {
+  const [reservation, setReservation] = useState(null); // {donor}
   const [taking, setTaking] = useState(false);
   const [error, setError] = useState(null);
-  const outOfStock = book.availableCount <= 0 && !reservation;
 
   const handleTake = async () => {
+    if (!requireLogin()) return;
+
     setTaking(true);
     setError(null);
     try {
       const result = await api.takeBook(book.id);
       setReservation(result);
-      if (onTaken) onTaken(book.id);
     } catch (err) {
-      setError(err.status === 409 ? 'Sorry, the last copy was just taken.' : err.message);
+      setError(err.status === 409 ? 'Sorry, this book was just taken.' : err.message);
     } finally {
       setTaking(false);
     }
@@ -24,7 +24,7 @@ function BookDetail({ book, onBack, onDonateMore, onTaken }) {
 
   const handleCancel = async () => {
     if (!reservation) return;
-    await api.cancelReservation(reservation.donationId);
+    await api.cancelReservation(book.id);
     setReservation(null);
   };
 
@@ -44,9 +44,7 @@ function BookDetail({ book, onBack, onDonateMore, onTaken }) {
           <p className="book-detail-author"><strong>Author:</strong> {book.author}</p>
           {book.genre && <span className="book-detail-genre">{book.genre}</span>}
 
-          <p className={`book-detail-stock ${outOfStock ? 'out-of-stock' : ''}`}>
-            {outOfStock ? 'Out of Stock' : `${book.availableCount} ${book.availableCount === 1 ? 'copy' : 'copies'} available`}
-          </p>
+          <p className="book-detail-location">📍 {book.location}</p>
 
           <p className="book-detail-description">{book.description}</p>
 
@@ -66,8 +64,8 @@ function BookDetail({ book, onBack, onDonateMore, onTaken }) {
 
           {!reservation && (
             <div className="book-detail-actions">
-              <button className="take-btn" onClick={handleTake} disabled={taking || outOfStock}>
-                {outOfStock ? 'Out of Stock' : taking ? 'Reserving…' : 'Take This Book'}
+              <button className="take-btn" onClick={handleTake} disabled={taking}>
+                {taking ? 'Reserving…' : 'Take This Book'}
               </button>
               <button className="donate-more-btn" onClick={onDonateMore}>
                 Donate Another Copy

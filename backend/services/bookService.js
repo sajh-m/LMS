@@ -1,128 +1,118 @@
-import { Book, Donation, User } from "../models/index.js";
+import { Donation, User } from "../models/index.js";
+
+// Fields safe to show on the public browsing list - location is a general
+// area (e.g. "Kathmandu"), not an exact address, so it's fine to show
+// upfront; the donor's name/contact stay hidden until someone takes it.
+const PUBLIC_ATTRIBUTES = [
+  "id",
+  "title",
+  "author",
+  "genre",
+  "description",
+  "image",
+  "location",
+  "createdAt",
+];
 
 export const BookService = {
-  // Every book listed alongside how many *available* (not reserved) copies exist.
-  getAllBooks: async () => {
-    const books = await Book.findAll({
-      include: [{ model: Donation, as: "donations", attributes: ["id", "status"] }],
-      order: [["id", "ASC"]],
-    });
+  // Only ever shows AVAILABLE copies - once reserved, a listing is
+  // effectively claimed and disappears from public browsing.
+  getAllBooks: () =>
+    Donation.findAll({
+      where: { status: "available" },
+      attributes: PUBLIC_ATTRIBUTES,
+      order: [["id", "DESC"]],
+    }),
 
-    return books.map((book) => {
-      const json = book.toJSON();
-      const availableCount = json.donations.filter((d) => d.status === "available").length;
-      delete json.donations; // never expose raw donation/donor data in the list
-      return { ...json, availableCount };
-    });
-  },
+  getBookById: (id) => Donation.findByPk(id, { attributes: PUBLIC_ATTRIBUTES }),
 
-  getBookById: async (id) => {
-    const book = await Book.findByPk(id, {
-      include: [{ model: Donation, as: "donations", attributes: ["id", "status"] }],
-    });
-    if (!book) return null;
-
-    const json = book.toJSON();
-    const availableCount = json.donations.filter((d) => d.status === "available").length;
-    delete json.donations;
-    return { ...json, availableCount };
-  },
-
-  // Donating: find-or-create the shared Book catalog entry (by title+author),
-  // then create a new Donation row representing this specific physical copy.
-  donateBook: async (data, donorId) => {
-    const [book] = await Book.findOrCreate({
-      where: { title: data.title, author: data.author },
-      defaults: {
-        genre: data.genre,
-        description: data.description,
-        image: data.image,
-      },
-    });
-
-    const donation = await Donation.create({
-      bookId: book.id,
+  // Every donation is a brand new, fully independent entry - no matching
+  // against existing books, even if title+author are identical.
+  donateBook: (data, donorId) =>
+    Donation.create({
+      title: data.title,
+      author: data.author,
+      genre: data.genre || null,
+      description: data.description || null,
+      location: data.location,
+      image: data.image,
       donorId,
       status: "available",
-    });
+    }),
 
-    return { book, donation };
+  updateBook: async (id, data, requesterId) => {
+    const entry = await Donation.findByPk(id);
+    if (!entry) return { status: "not_found" };
+    if (entry.donorId !== requesterId) return { status: "forbidden" };
+
+    if (data.title !== undefined) entry.title = data.title;
+    if (data.author !== undefined) entry.author = data.author;
+    if (data.genre !== undefined) entry.genre = data.genre;
+    if (data.description !== undefined) entry.description = data.description;
+    if (data.location !== undefined) entry.location = data.location;
+    if (data.image !== undefined) entry.image = data.image;
+    await entry.save();
+
+    return { status: "ok", entry };
   },
 
-  // Reserves one random available copy of this book, revealing that
-  // specific donor's contact details to the borrower. Retries a few times
-  // to handle the rare case where two people take the last copy at once.
-  takeBook: async (bookId, borrowerId) => {
-    const book = await Book.findByPk(bookId);
-    if (!book) return { status: "not_found" };
+  // This IS the "mark as given" action - deleting the row is the whole
+  // point, whether the donor is withdrawing an unclaimed listing or
+  // confirming a reserved one was physically handed over.
+  deleteBook: async (id, requesterId) => {
+    const entry = await Donation.findByPk(id);
+    if (!entry) return { status: "not_found" };
+    if (entry.donorId !== requesterId) return { status: "forbidden" };
 
-    for (let attempt = 0; attempt < 3; attempt++) {
-      const available = await Donation.findAll({
-        where: { bookId, status: "available" },
-        attributes: ["id"],
-      });
-
-      if (available.length === 0) {
-        return { status: "out_of_stock" };
-      }
-
-      const pick = available[Math.floor(Math.random() * available.length)];
-
-      const [affectedRows] = await Donation.update(
-        { status: "reserved", borrowerId },
-        { where: { id: pick.id, status: "available" } },
-      );
-
-      if (affectedRows > 0) {
-        const donation = await Donation.findByPk(pick.id, {
-          include: [{ model: User, as: "donor", attributes: ["id", "name", "email", "phone"] }],
-        });
-        return { status: "ok", donation };
-      }
-      // someone else grabbed this exact row first - loop and try again
-    }
-
-    return { status: "out_of_stock" };
-  },
-
-  cancelReservation: async (donationId, borrowerId) => {
-    const donation = await Donation.findByPk(donationId);
-    if (!donation) return { status: "not_found" };
-    if (donation.status !== "reserved" || donation.borrowerId !== borrowerId) {
-      return { status: "forbidden" };
-    }
-
-    donation.status = "available";
-    donation.borrowerId = null;
-    await donation.save();
-    return { status: "ok", donation };
-  },
-
-  // Donor confirms the book was physically handed over - the copy is
-  // removed entirely (the Book catalog entry itself stays, even at 0 copies).
-  completeDonation: async (donationId, donorId) => {
-    const donation = await Donation.findByPk(donationId);
-    if (!donation) return { status: "not_found" };
-    if (donation.donorId !== donorId) return { status: "forbidden" };
-
-    await donation.destroy();
+    await entry.destroy();
     return { status: "ok" };
   },
 
+  // Atomic: only succeeds if the row is STILL available at the moment of
+  // the update, so two people can't both claim the same single copy.
+  takeBook: async (id, borrowerId) => {
+    const entry = await Donation.findByPk(id);
+    if (!entry) return { status: "not_found" };
+
+    const [affectedRows] = await Donation.update(
+      { status: "reserved", borrowerId },
+      { where: { id, status: "available" } },
+    );
+
+    if (affectedRows === 0) return { status: "out_of_stock" };
+
+    const updated = await Donation.findByPk(id, {
+      include: [{ model: User, as: "donor", attributes: ["id", "name", "email", "phone"] }],
+    });
+    return { status: "ok", entry: updated };
+  },
+
+  cancelReservation: async (id, borrowerId) => {
+    const entry = await Donation.findByPk(id);
+    if (!entry) return { status: "not_found" };
+    if (entry.status !== "reserved" || entry.borrowerId !== borrowerId) {
+      return { status: "forbidden" };
+    }
+
+    entry.status = "available";
+    entry.borrowerId = null;
+    await entry.save();
+    return { status: "ok" };
+  },
+
+  // The donor's own dashboard - includes the borrower's contact details
+  // once someone has reserved it, so the donor can reach out too.
   getMyDonations: (donorId) =>
     Donation.findAll({
       where: { donorId },
-      include: [{ model: Book, as: "book" }],
+      include: [{ model: User, as: "borrower", attributes: ["id", "name", "email", "phone"] }],
       order: [["id", "DESC"]],
     }),
 
   getMyReservation: (borrowerId) =>
     Donation.findAll({
       where: { borrowerId, status: "reserved" },
-      include: [
-        { model: Book, as: "book" },
-        { model: User, as: "donor", attributes: ["id", "name", "email", "phone"] },
-      ],
+      include: [{ model: User, as: "donor", attributes: ["id", "name", "email", "phone"] }],
       order: [["id", "DESC"]],
     }),
 };

@@ -39,15 +39,16 @@ export const api = {
   getBooks: () => request("/books"),
 
   donateBook: (formData) =>
-    request("/books", { method: "POST", body: formData }), // no Content-Type - browser sets multipart boundary
+    request("/books", { method: "POST", body: formData }),
+
+  updateBook: (id, formData) =>
+    request(`/books/${id}`, { method: "PUT", body: formData }),
+
+  deleteBook: (id) => request(`/books/${id}`, { method: "DELETE" }),
 
   takeBook: (bookId) => request(`/books/${bookId}/take`, { method: "POST" }),
 
-  cancelReservation: (donationId) =>
-    request(`/books/donations/${donationId}/cancel`, { method: "POST" }),
-
-  completeDonation: (donationId) =>
-    request(`/books/donations/${donationId}/complete`, { method: "POST" }),
+  cancelReservation: (id) => request(`/books/${id}/cancel`, { method: "POST" }),
 
   getMyDonations: () => request("/books/mine/donated"),
   getMyReservation: () => request("/books/mine/reserved"),

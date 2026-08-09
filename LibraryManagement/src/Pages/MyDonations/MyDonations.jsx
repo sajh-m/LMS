@@ -32,16 +32,20 @@ function MyDonations() {
       <div className="donation-list">
         {donations.map((d) => (
           <div className="donation-row" key={d.id}>
-            <div>
-              <strong>{d.book.title}</strong> by {d.book.author}
-              <span className={`donation-status ${d.status}`}>{d.status}</span>
-            </div>
-            {d.status === 'reserved' && (
-              <button className="complete-btn" onClick={() => handleComplete(d.id)}>
-                Mark as Given
-              </button>
-            )}
-          </div>
+  <div>
+    <strong>{d.title}</strong> by {d.author}
+    <span className={`donation-status ${d.status}`}>{d.status}</span>
+    {d.status === 'reserved' && d.borrower && (
+      <div className="borrower-contact">
+        <p>Reserved by <strong>{d.borrower.name}</strong></p>
+        <p>{d.borrower.email} · {d.borrower.phone}</p>
+      </div>
+    )}
+  </div>
+  <button className="complete-btn" onClick={() => handleComplete(d.id)}>
+    Book Given
+  </button>
+</div>
         ))}
       </div>
     </div>

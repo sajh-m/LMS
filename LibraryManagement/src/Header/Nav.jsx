@@ -13,7 +13,6 @@ function Nav({ setPage, currentPage, user, onLogout }) {
       <ul>
         <li><a href="/books" className={linkClass('Books')} onClick={(e) => handleNavigation(e, 'Books')}>Books</a></li>
         <li><a href="/about" className={linkClass('About')} onClick={(e) => handleNavigation(e, 'About')}>About</a></li>
-        <li><a href="/contact" className={linkClass('Contact')} onClick={(e) => handleNavigation(e, 'Contact')}>Contact</a></li>
 
         {user && (
           <li><a href="/my-donations" className={linkClass('MyDonations')} onClick={(e) => handleNavigation(e, 'MyDonations')}>My Donations</a></li>

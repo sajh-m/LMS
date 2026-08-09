@@ -5,7 +5,7 @@ import Card from "./Card/Card";
 import DonateForm from './DonateForm/DonateForm';
 import BookDetail from './BookDetail/BookDetail';
 
-function Books({ setPage }) {
+function Books({ setPage, showToast }) {
   const [view, setView] = useState('list');
   const [selectedBook, setSelectedBook] = useState(null);
   const [books, setBooks] = useState([]);
@@ -17,16 +17,21 @@ function Books({ setPage }) {
 
   useEffect(() => { loadBooks(); }, []);
 
-  const requireLogin = (action) => {
+  const requireLogin = () => {
     if (!auth.isLoggedIn()) {
+      showToast('Please log in to donate or take a book.');
       setPage('Login');
       return false;
     }
-    return action();
+    return true;
   };
 
   const openDetail = (book) => { setSelectedBook(book); setView('detail'); };
-  const openForm = (prefill) => requireLogin(() => { setSelectedBook(prefill || null); setView('form'); });
+  const openForm = (prefill) => {
+    if (!requireLogin()) return;
+    setSelectedBook(prefill || null);
+    setView('form');
+  };
   const backToList = () => { setSelectedBook(null); setView('list'); loadBooks(); };
 
   return (
@@ -63,10 +68,10 @@ function Books({ setPage }) {
         <BookDetail
           book={selectedBook}
           onBack={backToList}
-          onTaken={() => {}}
-          onDonateMore={() => requireLogin(() =>
+          requireLogin={requireLogin}
+          onDonateMore={() =>
             openForm({ title: selectedBook.title, author: selectedBook.author })
-          )}
+          }
         />
       )}
 

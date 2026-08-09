@@ -6,11 +6,15 @@ import Books from './Pages/Books/Books'
 import Login from './Pages/Login/Login'
 import Register from './Pages/Register/Register'
 import MyDonations from './Pages/MyDonations/MyDonations'
+import Toast from './Toast/Toast'
 import { auth } from './api'
 
 function App() {
   const [page, setPage] = useState('Books')
   const [user, setUser] = useState(auth.getUser())
+  const [toastMessage, setToastMessage] = useState(null)
+
+  const showToast = (message) => setToastMessage(message)
 
   const handleLogout = () => {
     auth.logout()
@@ -26,11 +30,12 @@ function App() {
   return (
     <>
       <Header setPage={setPage} currentPage={page} user={user} onLogout={handleLogout} />
-      {page === 'Books' && <Books setPage={setPage} />}
+      {page === 'Books' && <Books setPage={setPage} showToast={showToast} />}
       {page === 'About' && <About />}
       {page === 'Login' && <Login setPage={setPage} onLoggedIn={handleLoggedIn} />}
       {page === 'Register' && <Register setPage={setPage} onLoggedIn={handleLoggedIn} />}
       {page === 'MyDonations' && <MyDonations />}
+      <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} />
     </>
   )
 }

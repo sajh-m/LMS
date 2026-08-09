@@ -5,16 +5,17 @@ import { requireAuth } from "../middlewares/auth.js";
 import { upload } from "../middlewares/upload.js";
 import {
   donateBookValidator,
+  updateBookValidator,
   idParamValidator,
-  donationIdParamValidator,
 } from "../validators/bookValidator.js";
 import {
   getBooks,
   getBookById,
   donateBook,
+  updateBook,
+  deleteBook,
   takeBook,
   cancelReservation,
-  completeDonation,
   getMyDonations,
   getMyReservation,
 } from "../controllers/bookController.js";
@@ -35,22 +36,19 @@ router.post(
   asyncHandler(donateBook),
 );
 
+router.put(
+  "/:id",
+  requireAuth,
+  upload.single("image"),
+  updateBookValidator,
+  validate,
+  asyncHandler(updateBook),
+);
+
+// "Book Given" button calls this directly - deletes the listing
+router.delete("/:id", requireAuth, idParamValidator, validate, asyncHandler(deleteBook));
+
 router.post("/:id/take", requireAuth, idParamValidator, validate, asyncHandler(takeBook));
-
-router.post(
-  "/donations/:donationId/cancel",
-  requireAuth,
-  donationIdParamValidator,
-  validate,
-  asyncHandler(cancelReservation),
-);
-
-router.post(
-  "/donations/:donationId/complete",
-  requireAuth,
-  donationIdParamValidator,
-  validate,
-  asyncHandler(completeDonation),
-);
+router.post("/:id/cancel", requireAuth, idParamValidator, validate, asyncHandler(cancelReservation));
 
 export default router;

@@ -10,68 +10,84 @@ export async function getBookById(req, res) {
   res.json(book);
 }
 
-// requires auth (req.userId = donor) and a multer-parsed image (req.file)
+// requires auth (req.userId = donor). Every submission creates a brand
+// new independent listing - a photo and a location are both mandatory.
 export async function donateBook(req, res) {
-  const { title, author, genre, description } = req.body;
+  const { title, author, genre, description, location } = req.body;
 
   if (!title || !author) {
     return res.status(400).json({ error: "Title and author are required" });
   }
+  if (!location) {
+    return res.status(400).json({ error: "Location is required" });
+  }
+  if (!req.file) {
+    return res.status(400).json({ error: "A photo of the book is required" });
+  }
 
-  const image = req.file ? `/uploads/${req.file.filename}` : null;
+  const image = `/uploads/${req.file.filename}`;
 
-  const { book, donation } = await BookService.donateBook(
-    { title, author, genre, description, image },
+  const entry = await BookService.donateBook(
+    { title, author, genre, description, location, image },
     req.userId,
   );
 
-  res.status(201).json({ book, donationId: donation.id });
+  res.status(201).json(entry);
 }
 
-// requires auth (req.userId = borrower)
+// requires auth; only the original donor can edit their own listing
+export async function updateBook(req, res) {
+  const { title, author, genre, description, location } = req.body;
+  const image = req.file ? `/uploads/${req.file.filename}` : undefined;
+
+  const result = await BookService.updateBook(
+    req.params.id,
+    { title, author, genre, description, location, image },
+    req.userId,
+  );
+
+  if (result.status === "not_found") return res.status(404).json({ message: "not found" });
+  if (result.status === "forbidden") return res.status(403).json({ message: "not your listing" });
+
+  res.json(result.entry);
+}
+
+// this is the "Book Given" button - deletes the listing entirely
+export async function deleteBook(req, res) {
+  const result = await BookService.deleteBook(req.params.id, req.userId);
+
+  if (result.status === "not_found") return res.status(404).json({ message: "not found" });
+  if (result.status === "forbidden") return res.status(403).json({ message: "not your listing" });
+
+  res.status(200).json({ message: "Listing removed" });
+}
+
+// requires auth (req.userId = borrower). Reveals the donor's contact
+// details AND location together, since both are needed to arrange pickup.
 export async function takeBook(req, res) {
   const result = await BookService.takeBook(req.params.id, req.userId);
 
-  if (result.status === "not_found") {
-    return res.status(404).json({ message: "not found" });
-  }
+  if (result.status === "not_found") return res.status(404).json({ message: "not found" });
   if (result.status === "out_of_stock") {
-    return res.status(409).json({ message: "out of stock" });
+    return res.status(409).json({ message: "This book has already been taken" });
   }
 
-  const { donation } = result;
+  const { entry } = result;
   res.status(200).json({
-    donationId: donation.id,
-    donor: donation.donor,
+    donationId: entry.id,
+    image: entry.image,
+    location: entry.location,
+    donor: entry.donor,
   });
 }
 
-// requires auth (req.userId = the borrower who made the reservation)
 export async function cancelReservation(req, res) {
-  const result = await BookService.cancelReservation(req.params.donationId, req.userId);
+  const result = await BookService.cancelReservation(req.params.id, req.userId);
 
-  if (result.status === "not_found") {
-    return res.status(404).json({ message: "reservation not found" });
-  }
-  if (result.status === "forbidden") {
-    return res.status(403).json({ message: "not your reservation" });
-  }
+  if (result.status === "not_found") return res.status(404).json({ message: "reservation not found" });
+  if (result.status === "forbidden") return res.status(403).json({ message: "not your reservation" });
 
   res.status(200).json({ message: "Reservation cancelled" });
-}
-
-// requires auth (req.userId = the donor who owns this donation)
-export async function completeDonation(req, res) {
-  const result = await BookService.completeDonation(req.params.donationId, req.userId);
-
-  if (result.status === "not_found") {
-    return res.status(404).json({ message: "donation not found" });
-  }
-  if (result.status === "forbidden") {
-    return res.status(403).json({ message: "not your donation" });
-  }
-
-  res.status(200).json({ message: "Donation marked as given" });
 }
 
 export async function getMyDonations(req, res) {

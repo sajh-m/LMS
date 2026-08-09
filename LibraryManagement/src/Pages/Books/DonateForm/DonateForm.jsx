@@ -1,13 +1,14 @@
-import { useState } from 'react';
-import { api} from '../../../api';
-import './DonateForm.css';
+import { useState } from "react";
+import { api } from "../../../api";
+import "./DonateForm.css";
 
 function DonateForm({ onCancel, onSubmitted, prefill }) {
   const [form, setForm] = useState(() => ({
-    title: prefill?.title || '',
-    author: prefill?.author || '',
-    genre: '',
-    description: '',
+    title: prefill?.title || "",
+    author: prefill?.author || "",
+    genre: "",
+    location: "",
+    description: "",
   }));
   const [imageFile, setImageFile] = useState(null);
   const [errors, setErrors] = useState([]);
@@ -23,11 +24,12 @@ function DonateForm({ onCancel, onSubmitted, prefill }) {
 
     try {
       const fd = new FormData();
-      fd.append('title', form.title);
-      fd.append('author', form.author);
-      fd.append('genre', form.genre);
-      fd.append('description', form.description);
-      if (imageFile) fd.append('image', imageFile);
+      fd.append("title", form.title);
+      fd.append("author", form.author);
+      fd.append("genre", form.genre);
+      fd.append('location', form.location); 
+      fd.append("description", form.description);
+      if (imageFile) fd.append("image", imageFile);
 
       await api.donateBook(fd);
       if (onSubmitted) onSubmitted();
@@ -45,19 +47,33 @@ function DonateForm({ onCancel, onSubmitted, prefill }) {
       {errors.length > 0 && (
         <ul className="donate-form-errors">
           {errors.map((err, i) => (
-            <li key={i}>{err.field ? `${err.field}: ${err.message}` : err.message}</li>
+            <li key={i}>
+              {err.field ? `${err.field}: ${err.message}` : err.message}
+            </li>
           ))}
         </ul>
       )}
 
       <label htmlFor="title">Title:</label>
-      <input id="title" type="text" placeholder="Book Title" value={form.title} onChange={handleChange('title')} />
+      <input
+        id="title"
+        type="text"
+        placeholder="Book Title"
+        value={form.title}
+        onChange={handleChange("title")}
+      />
 
       <label htmlFor="author">Author:</label>
-      <input id="author" type="text" placeholder="Book Author" value={form.author} onChange={handleChange('author')} />
+      <input
+        id="author"
+        type="text"
+        placeholder="Book Author"
+        value={form.author}
+        onChange={handleChange("author")}
+      />
 
       <label htmlFor="genre">Genre:</label>
-      <select id="genre" value={form.genre} onChange={handleChange('genre')}>
+      <select id="genre" value={form.genre} onChange={handleChange("genre")}>
         <option value="">Select a genre</option>
         <option value="fiction">Fiction</option>
         <option value="non-fiction">Non-Fiction</option>
@@ -68,10 +84,26 @@ function DonateForm({ onCancel, onSubmitted, prefill }) {
         <option value="history">History</option>
         <option value="other">Other</option>
       </select>
-
+      <label htmlFor="location">Meeting Area:</label>
+      <input
+        id="location"
+        type="text"
+        placeholder="e.g. Kathmandu"
+        value={form.location}
+        onChange={handleChange("location")}
+      />
       <label htmlFor="description">Description:</label>
-      <textarea id="description" placeholder="Book Description" value={form.description} onChange={handleChange('description')} />
+      <textarea
+        id="description"
+        placeholder="Book Description"
+        value={form.description}
+        onChange={handleChange("description")}
+      />
 
+      <p className="donate-form-hint">
+        Just the general area you're willing to meet — not your exact address
+        (e.g. "Kathmandu", not "Basantapur, Kathmandu").
+      </p>
       <label htmlFor="image">Photo of the book:</label>
       <input
         id="image"
@@ -81,8 +113,12 @@ function DonateForm({ onCancel, onSubmitted, prefill }) {
       />
 
       <div className="donate-form-actions">
-        <button type="submit" className="donate-submit-btn" disabled={submitting}>
-          {submitting ? 'Adding…' : 'Add Book'}
+        <button
+          type="submit"
+          className="donate-submit-btn"
+          disabled={submitting}
+        >
+          {submitting ? "Adding…" : "Add Book"}
         </button>
         <button type="button" className="donate-cancel-btn" onClick={onCancel}>
           Cancel
