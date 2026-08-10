@@ -34,7 +34,7 @@ function App() {
     <>
       <Header setPage={setPage} currentPage={page} user={user} onLogout={handleLogout} />
       
-      {page === 'Books' && <Books setPage={setPage} showToast={showToast} isAdmin={user?.role === 'admin'} />}
+      {page === 'Books' && <Books setPage={setPage} showToast={showToast} isAdmin={user?.role === 'admin'} />}      
       {page === 'AdminBooks' && user?.role === 'admin' && <AdminBooks />}
       {page === 'About' && <About />}
       {page === 'Login' && <Login setPage={setPage} onLoggedIn={handleLoggedIn} />}

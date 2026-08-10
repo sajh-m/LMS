@@ -3,16 +3,18 @@ import { api, auth } from '../../../api';
 import './BookDetail.css';
 
 function BookDetail({ book, onBack, onDonateMore, requireLogin }) {
-  const [reservation, setReservation] = useState(null);
+  const [reservation, setReservation] = useState(null); // { donor: {...} }
   const [taking, setTaking] = useState(false);
   const [removing, setRemoving] = useState(false);
   const [error, setError] = useState(null);
 
   const currentUser = auth.getUser();
   const isOwnBook = currentUser && book.donorId === currentUser.id;
+  const isAdmin = currentUser?.role === 'admin';
 
   const handleTake = async () => {
     if (!requireLogin()) return;
+
     setTaking(true);
     setError(null);
     try {
@@ -33,6 +35,7 @@ function BookDetail({ book, onBack, onDonateMore, requireLogin }) {
 
   const handleRemove = async () => {
     setRemoving(true);
+    setError(null);
     try {
       await api.deleteBook(book.id);
       onBack();
@@ -72,7 +75,7 @@ function BookDetail({ book, onBack, onDonateMore, requireLogin }) {
             </div>
           )}
 
-          {!isOwnBook && reservation && (
+          {!isOwnBook && !isAdmin && reservation && (
             <div className="reservation-box">
               <p className="reservation-label">Contact this donor to arrange pickup:</p>
               <p><strong>{reservation.donor.name}</strong></p>
@@ -84,7 +87,7 @@ function BookDetail({ book, onBack, onDonateMore, requireLogin }) {
             </div>
           )}
 
-          {!isOwnBook && !reservation && (
+          {!isOwnBook && !isAdmin && !reservation && (
             <div className="book-detail-actions">
               <button className="take-btn" onClick={handleTake} disabled={taking}>
                 {taking ? 'Reserving…' : 'Take This Book'}
@@ -93,6 +96,10 @@ function BookDetail({ book, onBack, onDonateMore, requireLogin }) {
                 Donate Another Copy
               </button>
             </div>
+          )}
+
+          {isAdmin && !isOwnBook && (
+            <p className="own-book-note">Admins can't take or donate books — use Manage Listings to moderate this entry.</p>
           )}
         </div>
       </div>

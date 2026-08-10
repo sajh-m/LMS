@@ -6,7 +6,7 @@ import Card from "./Card/Card";
 import DonateForm from './DonateForm/DonateForm';
 import BookDetail from './BookDetail/BookDetail';
 
-function Books({ setPage, showToast }) {
+function Books({ setPage, showToast, isAdmin }) {
   const [view, setView] = useState('list');
   const [selectedBook, setSelectedBook] = useState(null);
   const [books, setBooks] = useState([]);
@@ -41,9 +41,9 @@ function Books({ setPage, showToast }) {
 
   return (
     <div className="books-page">
-      <div className="books-header">
+      <div className="page-header-row">
         <h2 className="Page-title">Books</h2>
-        {view === 'list' && (
+        {view === 'list' && !isAdmin && (
           <button className="donate-toggle-btn" onClick={() => openForm()}>
             <span className="donate-toggle-icon">+</span>
             Donate a Book

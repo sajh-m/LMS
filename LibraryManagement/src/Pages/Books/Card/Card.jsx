@@ -1,7 +1,6 @@
 import './Card.css';
 
 function Card({ title, author, description, image, location, onClick }) {
-
   const handleKeyDown = (e) => {
     if (onClick && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault();
