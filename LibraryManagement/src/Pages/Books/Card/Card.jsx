@@ -18,7 +18,7 @@ function Card({ title, author, description, image, location, onClick }) {
     >
       <div className="card-cover">
         <img
-          src={image ? `http://localhost:3001${image}` : 'https://placehold.co/300x400?text=No+Cover'}
+          src={image || 'https://placehold.co/300x400?text=No+Cover'}
           alt={`Cover of ${title}`}
         />
       </div>
