@@ -52,7 +52,7 @@ function BookDetail({ book, onBack, onDonateMore, requireLogin }) {
       <div className="book-detail-body">
         <img
           className="book-detail-cover"
-          src={book.image ? `http://localhost:3001${book.image}` : 'https://placehold.co/300x400?text=No+Cover'}
+          src={book.image || 'https://placehold.co/300x400?text=No+Cover'}
           alt={`Cover of ${book.title}`}
         />
 
