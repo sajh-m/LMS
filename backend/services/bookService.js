@@ -19,9 +19,7 @@ const PUBLIC_ATTRIBUTES = [
 // "The Great Gatsby". Every filter is independent and optional; passing
 // just one narrows results by that field alone.
 function likeCondition(field, value) {
-  return sqlWhere(fn("lower", col(field)), {
-    [Op.like]: `%${value.trim().toLowerCase()}%`,
-  });
+  return sqlWhere(fn("lower", col(field)), { [Op.like]: `%${value.trim().toLowerCase()}%` });
 }
 
 // Same idea, but for a column on an included association (e.g. donor.name)
@@ -35,8 +33,7 @@ function buildTextConditions(filters) {
   const conditions = [];
   if (filters.title) conditions.push(likeCondition("title", filters.title));
   if (filters.author) conditions.push(likeCondition("author", filters.author));
-  if (filters.location)
-    conditions.push(likeCondition("location", filters.location));
+  if (filters.location) conditions.push(likeCondition("location", filters.location));
   if (filters.genre) conditions.push(likeCondition("genre", filters.genre));
   return conditions;
 }
@@ -68,8 +65,11 @@ export const BookService = {
 
   getBookById: (id) => Donation.findByPk(id, { attributes: PUBLIC_ATTRIBUTES }),
 
-  donateBook: (data, donorId) =>
-    Donation.create({
+  donateBook: async (data, donorId) => {
+    const donor = await User.findByPk(donorId);
+    if (donor?.role === "admin") return { status: "forbidden_admin" };
+
+    const entry = await Donation.create({
       title: data.title,
       author: data.author,
       genre: data.genre || null,
@@ -78,7 +78,10 @@ export const BookService = {
       image: data.image,
       donorId,
       status: "available",
-    }),
+    });
+
+    return { status: "ok", entry };
+  },
 
   updateBook: async (id, data, requesterId) => {
     const entry = await Donation.findByPk(id);
@@ -95,6 +98,8 @@ export const BookService = {
     if (data.image !== undefined) entry.image = data.image;
     await entry.save();
 
+    // a new photo was uploaded and replaced the old one - the old file
+    // is now unreferenced anywhere, so remove it from disk
     if (data.image !== undefined && data.image !== oldImage) {
       await deleteUploadedFile(oldImage);
     }
@@ -129,13 +134,7 @@ export const BookService = {
     if (affectedRows === 0) return { status: "out_of_stock" };
 
     const updated = await Donation.findByPk(id, {
-      include: [
-        {
-          model: User,
-          as: "donor",
-          attributes: ["id", "name", "email", "phone"],
-        },
-      ],
+      include: [{ model: User, as: "donor", attributes: ["id", "name", "email", "phone"] }],
     });
     return { status: "ok", entry: updated };
   },
@@ -160,13 +159,7 @@ export const BookService = {
 
     return Donation.findAll({
       where,
-      include: [
-        {
-          model: User,
-          as: "borrower",
-          attributes: ["id", "name", "email", "phone"],
-        },
-      ],
+      include: [{ model: User, as: "borrower", attributes: ["id", "name", "email", "phone"] }],
       order: [["id", "DESC"]],
     });
   },
@@ -177,11 +170,7 @@ export const BookService = {
     if (conditions.length > 0) where[Op.and] = conditions;
 
     const include = [
-      {
-        model: User,
-        as: "donor",
-        attributes: ["id", "name", "email", "phone"],
-      },
+      { model: User, as: "donor", attributes: ["id", "name", "email", "phone"] },
     ];
     if (filters.donorName) {
       include[0].required = true;
@@ -202,16 +191,8 @@ export const BookService = {
     return Donation.findAll({
       where,
       include: [
-        {
-          model: User,
-          as: "donor",
-          attributes: ["id", "name", "email", "phone"],
-        },
-        {
-          model: User,
-          as: "borrower",
-          attributes: ["id", "name", "email", "phone"],
-        },
+        { model: User, as: "donor", attributes: ["id", "name", "email", "phone"] },
+        { model: User, as: "borrower", attributes: ["id", "name", "email", "phone"] },
       ],
       order: [["id", "DESC"]],
     });
@@ -229,15 +210,9 @@ export const BookService = {
     await entry.destroy();
     await deleteUploadedFile(image);
 
-    await NotificationService.create(
-      donorId,
-      `An admin removed your donated book "${title}".`,
-    );
+    await NotificationService.create(donorId, `An admin removed your donated book "${title}".`);
     if (status === "reserved" && borrowerId) {
-      await NotificationService.create(
-        borrowerId,
-        `Your reservation for "${title}" was cancelled.`,
-      );
+      await NotificationService.create(borrowerId, `Your reservation for "${title}" was cancelled.`);
     }
 
     return { status: "ok" };
@@ -259,10 +234,7 @@ export const BookService = {
       donorId,
       `An admin cancelled the reservation on your book "${title}". It's available again.`,
     );
-    await NotificationService.create(
-      borrowerId,
-      `Your reservation for "${title}" was cancelled.`,
-    );
+    await NotificationService.create(borrowerId, `Your reservation for "${title}" was cancelled.`);
 
     return { status: "ok" };
   },

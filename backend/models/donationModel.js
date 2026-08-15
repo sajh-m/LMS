@@ -1,6 +1,9 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database.js";
 
+// One row = one physical book, donated by one specific person.
+// No shared "Book" catalog entry anymore - every donation is fully
+// independent, even if two people donate the exact same title/author.
 export const Donation = sequelize.define("Donation", {
   id: {
     type: DataTypes.INTEGER,
@@ -24,6 +27,8 @@ export const Donation = sequelize.define("Donation", {
     allowNull: true,
   },
   location: {
+    // where the donor is based / where pickup happens - only revealed
+    // to a borrower once they take this specific copy
     type: DataTypes.STRING,
     allowNull: false,
   },

@@ -1,4 +1,5 @@
 import { BookService } from "../services/bookService.js";
+import { deleteUploadedFile } from "../utils/deleteUploadedFile.js";
 
 export async function getBooks(req, res) {
   const { title, author, genre, location, donorName } = req.query;
@@ -13,6 +14,7 @@ export async function getBookById(req, res) {
 
 // requires auth (req.userId = donor). Every submission creates a brand
 // new independent listing - a photo and a location are both mandatory.
+// Admin accounts cannot donate - they only moderate listings.
 export async function donateBook(req, res) {
   const { title, author, genre, description, location } = req.body;
 
@@ -26,20 +28,27 @@ export async function donateBook(req, res) {
     return res.status(400).json({ error: "A photo of the book is required" });
   }
 
-  const image = `/uploads/${req.file.filename}`;
+  // Cloudinary gives us the full URL directly in req.file.path
+  const image = req.file.path;
 
-  const entry = await BookService.donateBook(
+  const result = await BookService.donateBook(
     { title, author, genre, description, location, image },
     req.userId,
   );
 
-  res.status(201).json(entry);
+  if (result.status === "forbidden_admin") {
+    await deleteUploadedFile(image);
+    return res.status(403).json({ error: "Admin accounts cannot donate books" });
+  }
+
+  res.status(201).json(result.entry);
 }
 
 // requires auth; only the original donor can edit their own listing
 export async function updateBook(req, res) {
   const { title, author, genre, description, location } = req.body;
-  const image = req.file ? `/uploads/${req.file.filename}` : undefined;
+  // Cloudinary URL comes in req.file.path, not req.file.filename
+  const image = req.file ? req.file.path : undefined;
 
   const result = await BookService.updateBook(
     req.params.id,
