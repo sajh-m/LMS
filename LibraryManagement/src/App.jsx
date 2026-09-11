@@ -11,6 +11,7 @@ import MyDonations from './Pages/MyDonations/MyDonations'
 import MyReservations from './Pages/MyReservations/MyReservations'
 import Toast from './Toast/Toast'
 import { auth } from './api'
+import AdminAuditLog from './Pages/AdminAuditLog/AdminAuditLog';
 
 function App() {
   const [page, setPage] = useState('Books')
@@ -36,6 +37,7 @@ function App() {
       
       {page === 'Books' && <Books setPage={setPage} showToast={showToast} isAdmin={user?.role === 'admin'} />}      
       {page === 'AdminBooks' && user?.role === 'admin' && <AdminBooks />}
+      {page === 'AuditLog' && user?.role === 'admin' && <AdminAuditLog />}
       {page === 'About' && <About />}
       {page === 'Login' && <Login setPage={setPage} onLoggedIn={handleLoggedIn} />}
       {page === 'Register' && <Register setPage={setPage} onLoggedIn={handleLoggedIn} />}

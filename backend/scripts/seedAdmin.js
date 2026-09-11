@@ -1,6 +1,6 @@
-// Manual/optional now - server.js calls ensureAdminAccount() automatically
-// on every startup. This script is kept for CI or one-off admin setup
-// without starting the whole server.
+// Manual/optional - server.js calls ensureAdminAccount() automatically
+// on every startup. This script is kept for CI or one-off setup without
+// starting the whole server.
 import "dotenv/config";
 import { sequelize } from "../config/database.js";
 import "../models/index.js";
@@ -11,5 +11,4 @@ const run = async () => {
   await ensureAdminAccount();
   process.exit(0);
 };
-
 run();

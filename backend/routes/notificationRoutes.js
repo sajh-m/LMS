@@ -1,11 +1,7 @@
 import express from "express";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import { requireAuth } from "../middlewares/auth.js";
-import {
-  getMyNotifications,
-  markNotificationRead,
-  markAllNotificationsRead,
-} from "../controllers/notificationController.js";
+import { getMyNotifications, markNotificationRead, markAllNotificationsRead } from "../controllers/notificationController.js";
 
 const router = express.Router();
 router.use(requireAuth);

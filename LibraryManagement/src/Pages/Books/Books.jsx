@@ -50,7 +50,7 @@ function Books({ setPage, showToast, isAdmin }) {
           </button>
         )}
       </div>
-
+        
       {view === 'list' && <FilterBar filters={filters} onChange={setFilters} />}
 
       {view === 'list' && loading && <p>Loading books…</p>}
@@ -69,6 +69,7 @@ function Books({ setPage, showToast, isAdmin }) {
               description={book.description}
               image={book.image}
               location={book.location}
+              pendingRequestCount={book.pendingRequestCount}
               onClick={() => openDetail(book)}
             />
           ))}
@@ -81,6 +82,7 @@ function Books({ setPage, showToast, isAdmin }) {
           onBack={backToList}
           requireLogin={requireLogin}
           onDonateMore={() => openForm({ title: selectedBook.title, author: selectedBook.author })}
+          pendingRequestCount={selectedBook.pendingRequestCount}
         />
       )}
 

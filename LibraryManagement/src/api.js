@@ -1,5 +1,4 @@
 const API_URL = `${import.meta.env.VITE_API_URL}/api`;
-
 function getToken() {
   return localStorage.getItem("token");
 }
@@ -46,9 +45,20 @@ export const api = {
 
   deleteBook: (id) => request(`/books/${id}`, { method: "DELETE" }),
 
-  takeBook: (bookId) => request(`/books/${bookId}/take`, { method: "POST" }),
+  sendRequest: (donationId) =>
+    request(`/books/${donationId}/request`, { method: "POST" }),
 
-  cancelReservation: (id) => request(`/books/${id}/cancel`, { method: "POST" }),
+  withdrawRequest: (requestId) =>
+    request(`/books/requests/${requestId}/withdraw`, { method: "POST" }),
+
+  acceptRequest: (requestId) =>
+    request(`/books/requests/${requestId}/accept`, { method: "POST" }),
+
+  declineRequest: (requestId) =>
+    request(`/books/requests/${requestId}/decline`, { method: "POST" }),
+
+  cancelReservation: (requestId) =>
+    request(`/books/requests/${requestId}/cancel`, { method: "POST" }),
 
   getMyDonations: (filters) =>
     request(`/books/mine/donated${toQueryString(filters)}`),
@@ -70,6 +80,8 @@ export const api = {
 
   markAllNotificationsRead: () =>
     request("/notifications/read-all", { method: "POST" }),
+
+  getAuditLog: (filters) => request(`/admin/audit${toQueryString(filters)}`),
 };
 
 export const auth = {

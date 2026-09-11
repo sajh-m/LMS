@@ -1,7 +1,7 @@
 {
   "name": "lms-backend",
-  "version": "3.0.0",
-  "description": "Layered backend API for the Library Management System, with auth and donation tracking",
+  "version": "4.0.0",
+  "description": "Backend API for the community book donation Library Management System",
   "main": "server.js",
   "type": "module",
   "scripts": {

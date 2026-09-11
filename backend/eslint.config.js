@@ -5,9 +5,7 @@ export default [
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",
-      globals: {
-        ...globals.node,
-      },
+      globals: { ...globals.node },
     },
     rules: {
       "no-unused-vars": "warn",
@@ -16,7 +14,5 @@ export default [
       "no-console": "off",
     },
   },
-  {
-    ignores: ["node_modules", "data"],
-  },
+  { ignores: ["node_modules", "data", "uploads"] },
 ];

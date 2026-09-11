@@ -8,9 +8,7 @@ function toPublicUser(user) {
 }
 
 function signToken(user) {
-  return jwt.sign({ id: user.id }, config.jwtSecret, {
-    expiresIn: config.jwtExpiresIn,
-  });
+  return jwt.sign({ id: user.id }, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
 }
 
 export async function register(req, res) {
@@ -23,8 +21,8 @@ export async function register(req, res) {
 
   const passwordHash = await bcrypt.hash(password, 10);
   // role is NEVER read from the request body - always "user" here, no
-  // matter what a client sends. The only admin account is seeded directly
-  // via scripts/seedAdmin.js, not through this public endpoint.
+  // matter what a client sends. The only admin account is seeded via
+  // scripts/seedAdmin.js / adminSeedService.js, never through this endpoint.
   const user = await User.create({ name, email, phone, passwordHash, role: "user" });
 
   const token = signToken(user);
@@ -35,14 +33,10 @@ export async function login(req, res) {
   const { email, password } = req.body;
 
   const user = await User.findOne({ where: { email } });
-  if (!user) {
-    return res.status(401).json({ error: "Invalid email or password" });
-  }
+  if (!user) return res.status(401).json({ error: "Invalid email or password" });
 
   const valid = await bcrypt.compare(password, user.passwordHash);
-  if (!valid) {
-    return res.status(401).json({ error: "Invalid email or password" });
-  }
+  if (!valid) return res.status(401).json({ error: "Invalid email or password" });
 
   const token = signToken(user);
   res.json({ token, user: toPublicUser(user) });

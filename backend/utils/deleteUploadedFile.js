@@ -1,8 +1,8 @@
-import { deleteCloudinaryImage } from "../middlewares/upload.js";
+import { deleteImage } from "../middlewares/upload.js";
 
-// Drop-in replacement for the old local-file deletion.
-// Every caller (bookService, bookController) already uses this function,
-// so we just swap the implementation here with no other changes needed.
-export async function deleteUploadedFile(imageUrl) {
-  await deleteCloudinaryImage(imageUrl);
+// Every caller in bookService already uses this exact function name -
+// keeping it stable here means switching storage modes never requires
+// touching bookService.js at all.
+export async function deleteUploadedFile(imageRef) {
+  await deleteImage(imageRef);
 }

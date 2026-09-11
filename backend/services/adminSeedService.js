@@ -1,9 +1,8 @@
 import bcrypt from "bcryptjs";
 import { User } from "../models/index.js";
 
-// Called on every server startup. Idempotent: if an admin already exists,
-// this does nothing. Credentials still come from .env, never hardcoded -
-// this just removes the need to remember to run a separate seed command.
+// Called on every server startup. Idempotent - if an admin already
+// exists, this does nothing. Credentials come from .env, never hardcoded.
 export async function ensureAdminAccount() {
   const email = process.env.ADMIN_EMAIL;
   const password = process.env.ADMIN_PASSWORD;
@@ -11,9 +10,7 @@ export async function ensureAdminAccount() {
   const phone = process.env.ADMIN_PHONE || "0000000000";
 
   if (!email || !password) {
-    console.warn(
-      "ADMIN_EMAIL / ADMIN_PASSWORD not set in .env - skipping admin account setup.",
-    );
+    console.warn("ADMIN_EMAIL / ADMIN_PASSWORD not set in .env - skipping admin account setup.");
     return;
   }
 

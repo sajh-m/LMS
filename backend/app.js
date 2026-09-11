@@ -1,6 +1,8 @@
 // app.js
 import express from "express";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 import { loggers } from "./middlewares/loggers.js";
 import bookRoutes from "./routes/bookRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
@@ -9,6 +11,9 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import { errorHandler, notFoundHanlder } from "./middlewares/errorHandler.js";
 import { config } from "./config/index.js";
 import "./models/index.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(loggers);
@@ -20,14 +25,21 @@ app.use(
   }),
 );
 
+// Only serve local files when running in local storage mode - in
+// Cloudinary mode, images are already full external URLs and this
+// route is never hit.
+if (config.storageDriver === "local") {
+  app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+}
+
 app.use("/api/books", bookRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.get("/", (req, res) => {
-  res.send("api running");
+  res.send(`api running (storage: ${config.storageDriver})`);
 });
 
-app.use(notFoundHanlder); // must come after all real routes
-app.use(errorHandler); // must come last of all
+app.use(notFoundHanlder);
+app.use(errorHandler);
 export default app;

@@ -38,3 +38,15 @@
   cursor: pointer;
   white-space: nowrap;
 }
+
+.donations-error, .reservations-error {
+  background: #fbeceb;
+  border: 1px solid var(--stamp);
+  padding: 0.6rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--stamp-dark);
+  margin-bottom: 1rem;
+}
+
+.donation-status.pending { background: var(--brass); }

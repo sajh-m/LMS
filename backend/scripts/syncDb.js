@@ -1,5 +1,5 @@
 import { sequelize } from "../config/database.js";
-import "../models/index.js"; // registers Book
+import "../models/index.js"; // registers all models and associations
 
 const run = async () => {
   try {
