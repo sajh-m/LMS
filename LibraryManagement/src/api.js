@@ -45,20 +45,23 @@ export const api = {
 
   deleteBook: (id) => request(`/books/${id}`, { method: "DELETE" }),
 
-  sendRequest: (donationId) =>
-    request(`/books/${donationId}/request`, { method: "POST" }),
+  sendRequest: (bookId) =>
+    request(`/books/${bookId}/request`, { method: "POST" }),
 
-  withdrawRequest: (requestId) =>
-    request(`/books/requests/${requestId}/withdraw`, { method: "POST" }),
+  withdrawRequest: (bookId) =>
+    request(`/books/${bookId}/withdraw`, { method: "POST" }),
 
-  acceptRequest: (requestId) =>
-    request(`/books/requests/${requestId}/accept`, { method: "POST" }),
+  acceptRequest: (bookId) =>
+    request(`/books/${bookId}/accept`, { method: "POST" }),
 
-  declineRequest: (requestId) =>
-    request(`/books/requests/${requestId}/decline`, { method: "POST" }),
+  declineRequest: (bookId) =>
+    request(`/books/${bookId}/decline`, { method: "POST" }),
 
-  cancelReservation: (requestId) =>
-    request(`/books/requests/${requestId}/cancel`, { method: "POST" }),
+  cancelReservation: (bookId) =>
+    request(`/books/${bookId}/cancel`, { method: "POST" }),
+
+  receiveBook: (bookId) =>
+    request(`/books/${bookId}/receive`, { method: "POST" }),
 
   getMyDonations: (filters) =>
     request(`/books/mine/donated${toQueryString(filters)}`),

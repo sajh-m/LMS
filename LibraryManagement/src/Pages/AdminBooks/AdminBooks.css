@@ -40,3 +40,10 @@
   cursor: pointer;
   white-space: nowrap;
 }
+
+.admin-request-count {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--brass);
+  margin: 0.3rem 0;
+}

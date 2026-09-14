@@ -6,6 +6,9 @@ header {
   background-color: var(--ink);
   padding: 1rem 2rem;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 /* Application Title Styles */
@@ -40,6 +43,7 @@ nav a {
   text-transform: uppercase;
   padding-bottom: 0.35rem;
   transition: color 0.15s ease-in-out;
+  cursor: pointer;
 }
 
 /* brass underline that grows in on hover/focus/active */

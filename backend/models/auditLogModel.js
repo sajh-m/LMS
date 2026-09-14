@@ -11,7 +11,7 @@ export const AuditLog = sequelize.define("AuditLog", {
       "donation_created",
       "donation_removed_by_donor",
       "donation_removed_by_admin",
-      "donation_completed",
+      "donation_received",
       "request_sent",
       "request_withdrawn",
       "request_accepted",

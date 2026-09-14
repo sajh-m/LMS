@@ -1,19 +1,16 @@
 import { Op, fn, col, where as sqlWhere } from "sequelize";
-import { Donation, Request, User } from "../models/index.js";
+import { Donation, User } from "../models/index.js";
 import { NotificationService } from "./notificationService.js";
 import { deleteUploadedFile } from "../utils/deleteUploadedFile.js";
 import { AuditService } from "./auditService.js";
 
-// Only these fields are shown publicly - no contact info
 const PUBLIC_ATTRIBUTES = [
   "id", "title", "author", "genre", "description",
-  "image", "location", "donorId", "status", "createdAt",
+  "image", "location", "donorId", "borrowerId", "status", "createdAt",
 ];
 
 function likeCondition(field, value) {
-  return sqlWhere(fn("lower", col(field)), {
-    [Op.like]: `%${value.trim().toLowerCase()}%`,
-  });
+  return sqlWhere(fn("lower", col(field)), { [Op.like]: `%${value.trim().toLowerCase()}%` });
 }
 function likeAssocCondition(alias, field, value) {
   return sqlWhere(fn("lower", col(`${alias}.${field}`)), {
@@ -29,36 +26,40 @@ function buildTextConditions(filters) {
   return conditions;
 }
 
+// A pending borrower's contact stays hidden until the donor accepts -
+// used everywhere a borrower association is returned.
+function shapeBorrower(book) {
+  if (book.borrower && book.status === "pending") {
+    book.borrower = { id: book.borrower.id, name: book.borrower.name };
+  }
+  return book;
+}
+function shapeDonorForBorrowerView(book) {
+  if (book.donor && book.status === "pending") {
+    book.donor = { id: book.donor.id, name: book.donor.name };
+  }
+  return book;
+}
+
 export const BookService = {
-  // Public list - both available AND reserved shown (reserved still
-  // worth seeing so people know the title exists in the community)
-  getAllBooks: async (filters = {}) => {
-    const where = { status: "available" }; // reserved books are spoken for - hide from public browsing
+  // Only "available" books are ever publicly browsable - a book with an
+  // active request/reservation disappears from this list entirely.
+  getAllBooks: (filters = {}) => {
+    const where = { status: "available" };
     const conditions = buildTextConditions(filters);
     if (conditions.length > 0) where[Op.and] = conditions;
 
-    const donorInclude = { model: User, as: "donor", attributes: ["id", "name"] };
+    const donorInclude = { model: User, as: "donor", attributes: ["id", "name", "email", "phone"] };
     if (filters.donorName) {
       donorInclude.required = true;
       donorInclude.where = likeAssocCondition("donor", "name", filters.donorName);
     }
 
-    const books = await Donation.findAll({
+    return Donation.findAll({
       where,
-      include: [
-        donorInclude,
-        { model: Request, as: "requests", where: { status: "pending" }, required: false, attributes: ["id"] },
-      ],
+      include: [donorInclude],
       attributes: PUBLIC_ATTRIBUTES,
       order: [["id", "DESC"]],
-    });
-
-    // attach a raw count here; the controller decides who's allowed to see it
-    return books.map((b) => {
-      const json = b.toJSON();
-      json.pendingRequestCount = json.requests ? json.requests.length : 0;
-      delete json.requests;
-      return json;
     });
   },
 
@@ -66,16 +67,12 @@ export const BookService = {
     const book = await Donation.findByPk(id, {
       attributes: PUBLIC_ATTRIBUTES,
       include: [
-        { model: User, as: "donor", attributes: ["id", "name"] },
-        { model: Request, as: "requests", where: { status: "pending" }, required: false, attributes: ["id"] },
+        { model: User, as: "donor", attributes: ["id", "name", "email", "phone"] },
+        { model: User, as: "borrower", attributes: ["id", "name", "email", "phone"] },
       ],
     });
     if (!book) return null;
-
-    const json = book.toJSON();
-    json.pendingRequestCount = json.requests ? json.requests.length : 0;
-    delete json.requests;
-    return json;
+    return shapeBorrower(book.toJSON());
   },
 
   donateBook: async (data, donorId) => {
@@ -113,50 +110,39 @@ export const BookService = {
     return { status: "ok", entry };
   },
 
+  // Donor can only remove an UNCLAIMED listing - once someone has an
+  // active request/reservation on it, this is blocked (decline/withdraw/
+  // cancel has to resolve that first).
   deleteBook: async (id, requesterId) => {
     const entry = await Donation.findByPk(id);
     if (!entry) return { status: "not_found" };
     if (entry.donorId !== requesterId) return { status: "forbidden" };
+    if (entry.status !== "available") return { status: "has_active_request" };
 
     const donorUser = await User.findByPk(entry.donorId, { attributes: ["id", "name", "email"] });
-
-    const activeRequests = await Request.findAll({
-      where: { donationId: id, status: ["pending", "accepted"] },
-      include: [{ model: User, as: "borrower", attributes: ["id", "name", "email"] }],
-    });
-
-    await AuditService.log(
-      entry.status === "reserved" ? "donation_completed" : "donation_removed_by_donor",
-      { donation: entry, donorUser },
-    );
-
-    for (const req of activeRequests) {
-      await NotificationService.create(req.borrowerId, `The donor removed "${entry.title}" from the system.`);
-    }
+    await AuditService.log("donation_removed_by_donor", { donation: entry, donorUser });
 
     const { image } = entry;
-    await entry.destroy(); // cascades to Request rows
+    await entry.destroy();
     await deleteUploadedFile(image);
     return { status: "ok" };
   },
 
-  // Borrower sends a request - book stays available/public, multiple
-  // simultaneous requests from different people are allowed.
-  sendRequest: async (donationId, borrowerId) => {
+  // Borrower sends the ONE request this book can have at a time. Atomic
+  // update guards against two people requesting at the exact same moment.
+  sendRequest: async (id, borrowerId) => {
     const borrower = await User.findByPk(borrowerId);
     if (borrower?.role === "admin") return { status: "forbidden_admin" };
 
-    const entry = await Donation.findByPk(donationId);
+    const entry = await Donation.findByPk(id);
     if (!entry) return { status: "not_found" };
-    if (entry.status === "reserved") return { status: "already_reserved" };
     if (entry.donorId === borrowerId) return { status: "own_book" };
 
-    const existing = await Request.findOne({
-      where: { donationId, borrowerId, status: ["pending", "accepted"] },
-    });
-    if (existing) return { status: "already_requested" };
-
-    const req = await Request.create({ donationId, borrowerId, status: "pending" });
+    const [affectedRows] = await Donation.update(
+      { status: "pending", borrowerId },
+      { where: { id, status: "available" } },
+    );
+    if (affectedRows === 0) return { status: "not_available" };
 
     const donorUser = await User.findByPk(entry.donorId, { attributes: ["id", "name", "email"] });
     await AuditService.log("request_sent", { donation: entry, donorUser, borrowerUser: borrower });
@@ -166,206 +152,198 @@ export const BookService = {
       `${borrower.name} has requested to borrow "${entry.title}". Check My Donations to respond.`,
     );
 
-    return { status: "ok", requestId: req.id };
+    return { status: "ok" };
   },
 
-  withdrawRequest: async (requestId, borrowerId) => {
-    const req = await Request.findByPk(requestId, { include: [{ model: Donation, as: "donation" }] });
-    if (!req) return { status: "not_found" };
-    if (req.borrowerId !== borrowerId) return { status: "forbidden" };
-    if (req.status !== "pending") return { status: "not_pending" };
+  withdrawRequest: async (id, borrowerId) => {
+    const entry = await Donation.findByPk(id);
+    if (!entry) return { status: "not_found" };
+    if (entry.status !== "pending" || entry.borrowerId !== borrowerId) return { status: "forbidden" };
 
-    const donorUser = await User.findByPk(req.donation.donorId, { attributes: ["id", "name", "email"] });
+    const donorUser = await User.findByPk(entry.donorId, { attributes: ["id", "name", "email"] });
     const borrowerUser = await User.findByPk(borrowerId, { attributes: ["id", "name", "email"] });
+    await AuditService.log("request_withdrawn", { donation: entry, donorUser, borrowerUser });
 
-    await AuditService.log("request_withdrawn", { donation: req.donation, donorUser, borrowerUser });
-
-    req.status = "withdrawn";
-    await req.save();
+    entry.status = "available";
+    entry.borrowerId = null;
+    await entry.save();
 
     await NotificationService.create(
-      req.donation.donorId,
-      `${borrowerUser.name} withdrew their request for "${req.donation.title}".`,
+      entry.donorId,
+      `${borrowerUser.name} withdrew their request for "${entry.title}".`,
     );
 
     return { status: "ok" };
   },
 
-  // Donor accepts ONE request -> book reserved, ALL other pending
-  // requests on the same book auto-declined with notification.
-  acceptRequest: async (requestId, donorId) => {
-    const req = await Request.findByPk(requestId, {
-      include: [
-        { model: Donation, as: "donation" },
-        { model: User, as: "borrower", attributes: ["id", "name", "email", "phone"] },
-      ],
-    });
-    if (!req) return { status: "not_found" };
-    if (req.donation.donorId !== donorId) return { status: "forbidden" };
-    if (req.status !== "pending") return { status: "not_pending" };
+  acceptRequest: async (id, donorId) => {
+    const entry = await Donation.findByPk(id);
+    if (!entry) return { status: "not_found" };
+    if (entry.donorId !== donorId) return { status: "forbidden" };
+    if (entry.status !== "pending") return { status: "not_pending" };
+
+    entry.status = "reserved";
+    await entry.save();
 
     const donorUser = await User.findByPk(donorId, { attributes: ["id", "name", "email", "phone"] });
+    const borrowerUser = await User.findByPk(entry.borrowerId, { attributes: ["id", "name", "email", "phone"] });
 
-    req.status = "accepted";
-    await req.save();
-
-    req.donation.status = "reserved";
-    await req.donation.save();
-
-    await AuditService.log("request_accepted", { donation: req.donation, donorUser, borrowerUser: req.borrower });
-
-    const otherRequests = await Request.findAll({
-      where: { donationId: req.donationId, status: "pending", id: { [Op.ne]: requestId } },
-    });
-    for (const other of otherRequests) {
-      other.status = "declined";
-      await other.save();
-      await NotificationService.create(
-        other.borrowerId,
-        `Your request for "${req.donation.title}" was declined — another borrower was selected.`,
-      );
-    }
+    await AuditService.log("request_accepted", { donation: entry, donorUser, borrowerUser });
 
     await NotificationService.create(
-      req.borrowerId,
-      `${donorUser.name} accepted your request for "${req.donation.title}". Check My Reservations for their contact details.`,
+      entry.borrowerId,
+      `${donorUser.name} accepted your request for "${entry.title}". Check My Reservations for their contact details.`,
     );
 
-    return { status: "ok", donor: donorUser, borrower: req.borrower };
+    return { status: "ok", donor: donorUser, borrower: borrowerUser };
   },
 
-  declineRequest: async (requestId, donorId) => {
-    const req = await Request.findByPk(requestId, { include: [{ model: Donation, as: "donation" }] });
-    if (!req) return { status: "not_found" };
-    if (req.donation.donorId !== donorId) return { status: "forbidden" };
-    if (req.status !== "pending") return { status: "not_pending" };
+  declineRequest: async (id, donorId) => {
+    const entry = await Donation.findByPk(id);
+    if (!entry) return { status: "not_found" };
+    if (entry.donorId !== donorId) return { status: "forbidden" };
+    if (entry.status !== "pending") return { status: "not_pending" };
 
     const donorUser = await User.findByPk(donorId, { attributes: ["id", "name", "email"] });
-    const borrowerUser = await User.findByPk(req.borrowerId, { attributes: ["id", "name", "email"] });
+    const borrowerUser = await User.findByPk(entry.borrowerId, { attributes: ["id", "name", "email"] });
+    await AuditService.log("request_declined", { donation: entry, donorUser, borrowerUser });
 
-    await AuditService.log("request_declined", { donation: req.donation, donorUser, borrowerUser });
-
-    req.status = "declined";
-    await req.save();
+    const borrowerId = entry.borrowerId;
+    entry.status = "available";
+    entry.borrowerId = null;
+    await entry.save();
 
     await NotificationService.create(
-      req.borrowerId,
-      `Your request for "${req.donation.title}" was declined. The book is still available.`,
+      borrowerId,
+      `Your request for "${entry.title}" was declined. The book is available again.`,
     );
 
     return { status: "ok" };
   },
 
-  cancelReservation: async (requestId, borrowerId) => {
-    const req = await Request.findByPk(requestId, { include: [{ model: Donation, as: "donation" }] });
-    if (!req) return { status: "not_found" };
-    if (req.borrowerId !== borrowerId) return { status: "forbidden" };
-    if (req.status !== "accepted") return { status: "not_accepted" };
+  // Once RESERVED, the donor cannot back out unilaterally - only the
+  // borrower (this function) or an admin (adminCancelReservation) can
+  // end it. This function is only ever reachable via the borrower's own
+  // route, so ownership doubles as the enforcement.
+  cancelReservation: async (id, borrowerId) => {
+    const entry = await Donation.findByPk(id);
+    if (!entry) return { status: "not_found" };
+    if (entry.status !== "reserved" || entry.borrowerId !== borrowerId) return { status: "forbidden" };
 
-    const donorUser = await User.findByPk(req.donation.donorId, { attributes: ["id", "name", "email"] });
+    const donorUser = await User.findByPk(entry.donorId, { attributes: ["id", "name", "email"] });
     const borrowerUser = await User.findByPk(borrowerId, { attributes: ["id", "name", "email"] });
+    await AuditService.log("reservation_cancelled_by_borrower", { donation: entry, donorUser, borrowerUser });
 
-    await AuditService.log("reservation_cancelled_by_borrower", { donation: req.donation, donorUser, borrowerUser });
-
-    req.status = "withdrawn";
-    await req.save();
-
-    req.donation.status = "available";
-    await req.donation.save();
+    entry.status = "available";
+    entry.borrowerId = null;
+    await entry.save();
 
     await NotificationService.create(
-      req.donation.donorId,
-      `${borrowerUser.name} cancelled their reservation for "${req.donation.title}". It's available again.`,
+      entry.donorId,
+      `${borrowerUser.name} cancelled their reservation for "${entry.title}". It's available again.`,
     );
 
     return { status: "ok" };
   },
 
-  // My Donations - shows pending/accepted requests per listing, borrower NAME only
-  getMyDonations: (donorId, filters = {}) => {
+  // The BORROWER confirms the book was physically handed over - this is
+  // what actually completes the transaction and removes the listing.
+  receiveBook: async (id, borrowerId) => {
+    const entry = await Donation.findByPk(id);
+    if (!entry) return { status: "not_found" };
+    if (entry.status !== "reserved" || entry.borrowerId !== borrowerId) return { status: "forbidden" };
+
+    const donorUser = await User.findByPk(entry.donorId, { attributes: ["id", "name", "email"] });
+    const borrowerUser = await User.findByPk(borrowerId, { attributes: ["id", "name", "email"] });
+    await AuditService.log("donation_received", { donation: entry, donorUser, borrowerUser });
+
+    await NotificationService.create(
+      entry.donorId,
+      `${borrowerUser.name} confirmed they received "${entry.title}". Thanks for donating!`,
+    );
+
+    const { image } = entry;
+    await entry.destroy();
+    await deleteUploadedFile(image);
+    return { status: "ok" };
+  },
+
+  // Donor's own dashboard - sees every status of their own listings.
+  // Borrower contact stays hidden until they've actually accepted.
+  getMyDonations: async (donorId, filters = {}) => {
     const where = { donorId };
     const conditions = buildTextConditions(filters);
     if (conditions.length > 0) where[Op.and] = conditions;
 
-    return Donation.findAll({
+    const donations = await Donation.findAll({
       where,
-      include: [
-        {
-          model: Request,
-          as: "requests",
-          where: { status: ["pending", "accepted"] },
-          required: false,
-          include: [{ model: User, as: "borrower", attributes: ["id", "name"] }],
-        },
-      ],
+      include: [{ model: User, as: "borrower", attributes: ["id", "name", "email", "phone"] }],
       order: [["id", "DESC"]],
     });
+
+    return donations.map((d) => shapeBorrower(d.toJSON()));
   },
 
-  // My Reservations - borrower's own pending/accepted requests
-  getMyReservation: (borrowerId, filters = {}) => {
-    const where = { borrowerId, status: ["pending", "accepted"] };
+  // Borrower's own dashboard. Donor contact stays hidden until accepted.
+  getMyReservation: async (borrowerId, filters = {}) => {
+    const where = { borrowerId, status: ["pending", "reserved"] };
     const conditions = buildTextConditions(filters);
 
-    return Request.findAll({
-      where,
-      include: [
-        {
-          model: Donation,
-          as: "donation",
-          required: true,
-          where: conditions.length > 0 ? { [Op.and]: conditions } : undefined,
-          include: [{ model: User, as: "donor", attributes: ["id", "name", "email", "phone"] }],
-        },
-      ],
+    const include = [
+      { model: User, as: "donor", attributes: ["id", "name", "email", "phone"] },
+    ];
+    if (filters.donorName) {
+      include[0].required = true;
+      include[0].where = likeAssocCondition("donor", "name", filters.donorName);
+    }
+
+    const donations = await Donation.findAll({
+      where: conditions.length > 0 ? { ...where, [Op.and]: conditions } : where,
+      include,
       order: [["id", "DESC"]],
     });
+
+    return donations.map((d) => shapeDonorForBorrowerView(d.toJSON()));
   },
 
   // ---- Admin only ----
-  adminGetAllBooks: (filters = {}) => {
+
+  adminGetAllBooks: async (filters = {}) => {
     const where = {};
     const conditions = buildTextConditions(filters);
     if (conditions.length > 0) where[Op.and] = conditions;
 
-    return Donation.findAll({
+    const donations = await Donation.findAll({
       where,
       include: [
         { model: User, as: "donor", attributes: ["id", "name", "email", "phone"] },
-        {
-          model: Request, as: "requests",
-          where: { status: ["pending", "accepted"] },
-          required: false,
-          include: [{ model: User, as: "borrower", attributes: ["id", "name", "email", "phone"] }],
-        },
+        { model: User, as: "borrower", attributes: ["id", "name", "email", "phone"] },
       ],
       order: [["id", "DESC"]],
     });
+
+    // admin always sees full donor contact; borrower contact still
+    // stays hidden until accepted, same rule as everywhere else
+    return donations.map((d) => shapeBorrower(d.toJSON()));
   },
 
   adminDeleteBook: async (id, adminUser) => {
-    const entry = await Donation.findByPk(id, {
-      include: [{
-        model: Request, as: "requests",
-        where: { status: ["pending", "accepted"] },
-        required: false,
-      }],
-    });
+    const entry = await Donation.findByPk(id);
     if (!entry) return { status: "not_found" };
 
-    const donorUser = await User.findByPk(entry.donorId, { attributes: ["id", "name", "email"] });
+    const { title, donorId, borrowerId, status, image } = entry;
+    const donorUser = await User.findByPk(donorId, { attributes: ["id", "name", "email"] });
 
     await AuditService.log("donation_removed_by_admin", {
       donation: entry, donorUser,
       notes: `Admin: ${adminUser.name} (${adminUser.email})`,
     });
 
-    for (const req of entry.requests || []) {
-      await NotificationService.create(req.borrowerId, `An admin removed "${entry.title}" from the system.`);
+    if (borrowerId && (status === "pending" || status === "reserved")) {
+      await NotificationService.create(borrowerId, `An admin removed "${title}" from the system.`);
     }
-    await NotificationService.create(entry.donorId, `An admin removed your donated book "${entry.title}".`);
+    await NotificationService.create(donorId, `An admin removed your donated book "${title}".`);
 
-    const { image } = entry;
     await entry.destroy();
     await deleteUploadedFile(image);
     return { status: "ok" };
@@ -374,33 +352,43 @@ export const BookService = {
   adminCancelReservation: async (id, adminUser) => {
     const entry = await Donation.findByPk(id);
     if (!entry) return { status: "not_found" };
-    if (entry.status !== "reserved") return { status: "not_reserved" };
-
-    const acceptedReq = await Request.findOne({ where: { donationId: id, status: "accepted" } });
-
-    const donorUser = await User.findByPk(entry.donorId, { attributes: ["id", "name", "email"] });
-    const borrowerUser = acceptedReq
-      ? await User.findByPk(acceptedReq.borrowerId, { attributes: ["id", "name", "email"] })
-      : null;
-
-    await AuditService.log("reservation_cancelled_by_admin", {
-      donation: entry, donorUser, borrowerUser,
-      notes: `Admin: ${adminUser.name} (${adminUser.email})`,
-    });
-
-    if (acceptedReq) {
-      acceptedReq.status = "declined";
-      await acceptedReq.save();
-      await NotificationService.create(acceptedReq.borrowerId, `An admin cancelled your reservation for "${entry.title}".`);
+    if (entry.status !== "reserved" && entry.status !== "pending") {
+      return { status: "not_active" };
     }
 
+    const wasReserved = entry.status === "reserved";
+    const donorUser = await User.findByPk(entry.donorId, { attributes: ["id", "name", "email"] });
+    const borrowerUser = entry.borrowerId
+      ? await User.findByPk(entry.borrowerId, { attributes: ["id", "name", "email"] })
+      : null;
+
+    await AuditService.log(
+      wasReserved ? "reservation_cancelled_by_admin" : "request_declined",
+      {
+        donation: entry, donorUser, borrowerUser,
+        notes: `Admin: ${adminUser.name} (${adminUser.email})`,
+      },
+    );
+
+    const borrowerId = entry.borrowerId;
     entry.status = "available";
+    entry.borrowerId = null;
     await entry.save();
 
     await NotificationService.create(
       entry.donorId,
-      `An admin cancelled the reservation on your book "${entry.title}". It's available again.`,
+      wasReserved
+        ? `An admin cancelled the reservation on your book "${entry.title}". It's available again.`
+        : `An admin declined the pending request on your book "${entry.title}". It's available again.`,
     );
+    if (borrowerId) {
+      await NotificationService.create(
+        borrowerId,
+        wasReserved
+          ? `An admin cancelled your reservation for "${entry.title}".`
+          : `An admin declined your request for "${entry.title}".`,
+      );
+    }
 
     return { status: "ok" };
   },

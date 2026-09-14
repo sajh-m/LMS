@@ -3,7 +3,7 @@ import { api } from '../../api';
 import FilterBar from '../../FilterBar/FilterBar';
 import './MyReservations.css';
 
-function MyReservations() {
+function MyReservations({ focusBookId, onClearFocus }) {
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({});
@@ -19,14 +19,35 @@ function MyReservations() {
     return () => clearTimeout(handle);
   }, [filters, load]);
 
-  const handleCancel = async (requestId, status) => {
+  const visibleReservations = focusBookId
+    ? reservations.filter((r) => r.id === focusBookId)
+    : reservations;
+
+  const handleWithdraw = async (id) => {
     setError(null);
     try {
-      if (status === 'pending') {
-        await api.withdrawRequest(requestId);
-      } else {
-        await api.cancelReservation(requestId);
-      }
+      await api.withdrawRequest(id);
+      load();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleCancel = async (id) => {
+    setError(null);
+    try {
+      await api.cancelReservation(id);
+      load();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleReceive = async (id) => {
+    if (!confirm('Confirm you physically received this book? This permanently removes the listing.')) return;
+    setError(null);
+    try {
+      await api.receiveBook(id);
       load();
     } catch (err) {
       setError(err.message);
@@ -37,34 +58,56 @@ function MyReservations() {
     <div className="my-reservations-page">
       <h1 className="Page-title">My Reservations</h1>
 
-      <FilterBar filters={filters} onChange={setFilters} />
+      {focusBookId && (
+        <div className="focus-banner">
+          <span>Showing this book only</span>
+          <button className="focus-clear-btn" onClick={onClearFocus}>Show All</button>
+        </div>
+      )}
+
+      {!focusBookId && <FilterBar filters={filters} onChange={setFilters} />}
 
       {error && <p className="reservations-error">{error}</p>}
       {loading && <p>Loading…</p>}
-      {!loading && reservations.length === 0 && <p>No reservations match your filters.</p>}
+      {!loading && visibleReservations.length === 0 && <p>No reservations to show.</p>}
 
       <div className="reservation-list">
-        {reservations.filter((r) => r.donation).map((r) => (
+        {visibleReservations.map((r) => (
           <div className="reservation-row" key={r.id}>
             <div>
-              <strong>{r.donation.title}</strong> by {r.donation.author}
+              <strong>{r.title}</strong> by {r.author}
               <span className={`donation-status ${r.status}`}>{r.status}</span>
-              <p className="reservation-location">📍 {r.donation.location}</p>
+              <p className="reservation-location">📍 {r.location}</p>
 
               {r.status === 'pending' && (
                 <p className="contact-note">Waiting for the donor to respond…</p>
               )}
 
-              {r.status === 'accepted' && r.donation.donor && (
+              {r.status === 'reserved' && r.donor && (
                 <div className="donor-contact">
-                  <p><strong>{r.donation.donor.name}</strong></p>
-                  <p>{r.donation.donor.email} · {r.donation.donor.phone}</p>
+                  <p><strong>{r.donor.name}</strong></p>
+                  <p>{r.donor.email} · {r.donor.phone}</p>
                 </div>
               )}
             </div>
-            <button className="cancel-btn" onClick={() => handleCancel(r.id, r.status)}>
-              {r.status === 'pending' ? 'Withdraw Request' : 'Cancel Reservation'}
-            </button>
+
+            <div className="reservation-actions">
+              {r.status === 'pending' && (
+                <button className="cancel-btn" onClick={() => handleWithdraw(r.id)}>
+                  Withdraw Request
+                </button>
+              )}
+              {r.status === 'reserved' && (
+                <>
+                  <button className="received-btn" onClick={() => handleReceive(r.id)}>
+                    Book Received
+                  </button>
+                  <button className="cancel-btn" onClick={() => handleCancel(r.id)}>
+                    Cancel Reservation
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         ))}
       </div>

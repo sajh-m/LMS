@@ -18,7 +18,7 @@ export async function adminCancelReservation(req, res) {
   const adminUser = await User.findByPk(req.userId, { attributes: ["id", "name", "email"] });
   const result = await BookService.adminCancelReservation(req.params.id, adminUser);
   if (result.status === "not_found") return res.status(404).json({ message: "not found" });
-  if (result.status === "not_reserved") return res.status(409).json({ message: "This book is not currently reserved" });
+  if (result.status === "not_active") return res.status(409).json({ message: "This book has no active request or reservation" });
   res.json({ message: "Reservation cancelled" });
 }
 

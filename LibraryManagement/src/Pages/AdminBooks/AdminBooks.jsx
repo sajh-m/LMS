@@ -1,16 +1,22 @@
-import { useState, useEffect, useCallback } from 'react';
-import { api } from '../../api';
-import FilterBar from '../../FilterBar/FilterBar';
-import './AdminBooks.css';
+import { useState, useEffect, useCallback } from "react";
+import { api } from "../../api";
+import FilterBar from "../../FilterBar/FilterBar";
+import "./AdminBooks.css";
 
 function AdminBooks() {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({});
 
-  const load = useCallback((f = filters) => {
-    api.adminGetBooks(f).then(setBooks).finally(() => setLoading(false));
-  }, [filters]);
+  const load = useCallback(
+    (f = filters) => {
+      api
+        .adminGetBooks(f)
+        .then(setBooks)
+        .finally(() => setLoading(false));
+    },
+    [filters],
+  );
 
   useEffect(() => {
     const handle = setTimeout(() => load(filters), 300);
@@ -18,7 +24,7 @@ function AdminBooks() {
   }, [filters, load]);
 
   const handleDelete = async (id) => {
-    if (!confirm('Remove this listing? This cannot be undone.')) return;
+    if (!confirm("Remove this listing? This cannot be undone.")) return;
     await api.adminDeleteBook(id);
     load();
   };
@@ -32,7 +38,11 @@ function AdminBooks() {
     <div className="admin-books-page">
       <h1 className="Page-title">Admin: All Listings</h1>
 
-      <FilterBar filters={filters} onChange={setFilters} showDonorFilter={false} />
+      <FilterBar
+        filters={filters}
+        onChange={setFilters}
+        showDonorFilter={false}
+      />
 
       {loading && <p>Loading…</p>}
       {!loading && books.length === 0 && <p>No listings match.</p>}
@@ -43,14 +53,36 @@ function AdminBooks() {
             <div className="admin-row-info">
               <strong>{b.title}</strong> by {b.author}
               <span className={`donation-status ${b.status}`}>{b.status}</span>
-              <p className="admin-party">Donor: {b.donor?.name} · {b.donor?.email} · {b.donor?.phone}</p>
-              {b.borrower && (
-                <p className="admin-party">Borrower: {b.borrower.name} · {b.borrower.email} · {b.borrower.phone}</p>
+              <p className="admin-request-count">
+                {b.requests ? b.requests.length : 0} reservation request
+                {(b.requests?.length ?? 0) !== 1 ? "s" : ""}
+              </p>
+              <div className="admin-party">
+                <span className="admin-party-label">Donor</span>
+                <span>{b.donor?.name}</span>
+                <span className="admin-party-email">{b.donor?.email}</span>
+                <span className="admin-party-email">{b.donor?.phone}</span>
+              </div>
+              {b.requests && b.requests.length > 0 && (
+                <div className="admin-party">
+                  <span className="admin-party-label">Requests</span>
+                  {b.requests.map((r) => (
+                    <span key={r.id}>
+                      {r.borrower.name} — {r.status}
+                      {r.status === "accepted" &&
+                        ` (${r.borrower.email}, ${r.borrower.phone})`}
+                    </span>
+                  ))}
+                </div>
               )}
             </div>
+
             <div className="admin-row-actions">
-              {b.status === 'reserved' && (
-                <button className="cancel-btn" onClick={() => handleCancel(b.id)}>
+              {b.status === "reserved" && (
+                <button
+                  className="cancel-btn"
+                  onClick={() => handleCancel(b.id)}
+                >
                   Cancel Reservation
                 </button>
               )}

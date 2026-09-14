@@ -26,12 +26,9 @@ function Card({
     >
       <div className="card-cover">
         <img
-          // In Card.jsx and BookDetail.jsx
           src={
             image
-              ? image.startsWith("http")
-                ? image
-                : `${import.meta.env.VITE_API_URL}${image}`
+              ? `http://localhost:3001${image}`
               : "https://placehold.co/300x400?text=No+Cover"
           }
           alt={`Cover of ${title}`}

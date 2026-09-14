@@ -18,21 +18,17 @@ function ConfirmModal({ message, onConfirm, onCancel }) {
   );
 }
 
-function MyDonations() {
+function MyDonations({ focusBookId, onClearFocus }) {
   const [donations, setDonations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({});
   const [showForm, setShowForm] = useState(false);
   const [acceptTarget, setAcceptTarget] = useState(null);
-  const [contactInfo, setContactInfo] = useState({});
   const [error, setError] = useState(null);
 
   const load = useCallback((f = filters) => {
     setLoading(true);
-    api.getMyDonations(f).then((data) => {
-      console.log('MyDonations API response:', data); // temporary - check console
-      setDonations(data);
-    }).finally(() => setLoading(false));
+    api.getMyDonations(f).then(setDonations).finally(() => setLoading(false));
   }, [filters]);
 
   useEffect(() => {
@@ -40,38 +36,41 @@ function MyDonations() {
     return () => clearTimeout(handle);
   }, [filters, load]);
 
+  const visibleDonations = focusBookId
+    ? donations.filter((d) => d.id === focusBookId)
+    : donations;
+
   const handleDonated = () => {
     setShowForm(false);
     load();
   };
 
   const handleAcceptConfirm = async () => {
-    const requestId = acceptTarget;
+    const id = acceptTarget;
     setAcceptTarget(null);
     setError(null);
     try {
-      const result = await api.acceptRequest(requestId);
-      setContactInfo((prev) => ({ ...prev, [requestId]: result }));
+      await api.acceptRequest(id);
       load();
     } catch (err) {
       setError(err.message);
     }
   };
 
-  const handleDecline = async (requestId) => {
+  const handleDecline = async (id) => {
     setError(null);
     try {
-      await api.declineRequest(requestId);
+      await api.declineRequest(id);
       load();
     } catch (err) {
       setError(err.message);
     }
   };
 
-  const handleRemove = async (donationId) => {
+  const handleRemove = async (id) => {
     setError(null);
     try {
-      await api.deleteBook(donationId);
+      await api.deleteBook(id);
       load();
     } catch (err) {
       setError(err.message);
@@ -104,55 +103,55 @@ function MyDonations() {
 
       {!showForm && (
         <>
-          <FilterBar filters={filters} onChange={setFilters} showDonorFilter={false} />
+          {focusBookId && (
+            <div className="focus-banner">
+              <span>Showing this book only</span>
+              <button className="focus-clear-btn" onClick={onClearFocus}>Show All</button>
+            </div>
+          )}
+
+          {!focusBookId && <FilterBar filters={filters} onChange={setFilters} showDonorFilter={false} />}
 
           {error && <p className="donations-error">{error}</p>}
           {loading && <p>Loading…</p>}
-          {!loading && donations.length === 0 && <p>No donations match your filters.</p>}
+          {!loading && visibleDonations.length === 0 && <p>Nothing to show.</p>}
 
           <div className="donation-list">
-            {donations.map((d) => (
+            {visibleDonations.map((d) => (
               <div className="donation-row" key={d.id}>
-                <div className="donation-row-info">
-                  <strong>{d.title}</strong> by {d.author}
-                  <span className={`donation-status ${d.status}`}>{d.status}</span>
-
-                  {d.requests && d.requests.length > 0 && (
-                    <div className="request-list">
-                      <p className="request-list-label">
-                        {d.status === 'reserved'
-                          ? 'Reserved by:'
-                          : `${d.requests.length} pending request(s):`}
-                      </p>
-                      {d.requests.map((req) => (
-                        <div className="request-item" key={req.id}>
-                          <span className="request-item-name">{req.borrower.name}</span>
-
-                          {req.status === 'pending' && (
-                            <div className="request-item-actions">
-                              <button className="accept-btn" onClick={() => setAcceptTarget(req.id)}>
-                                Accept
-                              </button>
-                              <button className="decline-btn" onClick={() => handleDecline(req.id)}>
-                                Decline
-                              </button>
-                            </div>
-                          )}
-
-                          {req.status === 'accepted' && contactInfo[req.id] && (
-                            <div className="borrower-contact">
-                              <p>{contactInfo[req.id].borrower.email} · {contactInfo[req.id].borrower.phone}</p>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                <div className="donation-row-top">
+                  <div className="donation-row-info">
+                    <strong>{d.title}</strong>
+                    <span>by {d.author}</span>
+                    <span className={`donation-status ${d.status}`}>{d.status}</span>
+                  </div>
+                  {d.status === 'available' && (
+                    <button className="complete-btn" onClick={() => handleRemove(d.id)}>
+                      Remove Listing
+                    </button>
                   )}
                 </div>
 
-                <button className="complete-btn" onClick={() => handleRemove(d.id)}>
-                  {d.status === 'reserved' ? 'Book Given' : 'Remove Listing'}
-                </button>
+                {d.status === 'pending' && d.borrower && (
+                  <div className="request-list">
+                    <p className="request-list-label">Pending request:</p>
+                    <div className="request-item">
+                      <span className="request-item-name">{d.borrower.name}</span>
+                      <div className="request-item-actions">
+                        <button className="accept-btn" onClick={() => setAcceptTarget(d.id)}>Accept</button>
+                        <button className="decline-btn" onClick={() => handleDecline(d.id)}>Decline</button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {d.status === 'reserved' && d.borrower && (
+                  <div className="request-list">
+                    <p className="request-list-label">Reserved by {d.borrower.name}</p>
+                    <p className="contact-note">{d.borrower.email} · {d.borrower.phone}</p>
+                    <p className="contact-note">Waiting for them to confirm receipt…</p>
+                  </div>
+                )}
               </div>
             ))}
           </div>

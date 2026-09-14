@@ -1,6 +1,12 @@
 .my-reservations-page { padding: 1.5rem 2rem; }
 
-.reservation-list { margin-top: 1.5rem; max-width: 34rem; }
+.reservation-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+  max-width: none;
+  width: 100%;
+}
 
 .reservation-row {
   display: flex;
@@ -50,3 +56,50 @@
 }
 
 .donation-status.pending { background: var(--brass); }
+
+.reservation-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.received-btn {
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  padding: 0.5rem 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.focus-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--brass);
+  padding: 0.6rem 1rem;
+  margin-bottom: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.focus-clear-btn {
+  background: none;
+  border: none;
+  color: var(--stamp);
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .reservation-list {
+    grid-template-columns: 1fr;
+  }
+}

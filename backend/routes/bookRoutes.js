@@ -8,7 +8,7 @@ import { donateBookValidator, updateBookValidator, idParamValidator } from "../v
 import {
   getBooks, getBookById, donateBook, updateBook, deleteBook,
   sendRequest, withdrawRequest, acceptRequest, declineRequest,
-  cancelReservation, getMyDonations, getMyReservation,
+  cancelReservation, receiveBook, getMyDonations, getMyReservation,
 } from "../controllers/bookController.js";
 
 const router = express.Router();
@@ -22,15 +22,13 @@ router.post("/", requireAuth, upload.single("image"), donateBookValidator, valid
 router.put("/:id", requireAuth, upload.single("image"), updateBookValidator, validate, asyncHandler(updateBook));
 router.delete("/:id", requireAuth, idParamValidator, validate, asyncHandler(deleteBook));
 
-// donationId-based - borrower initiates
+// Single-request model: all of these act on the Donation itself (:id),
+// there's no separate Request entity anymore.
 router.post("/:id/request", requireAuth, idParamValidator, validate, asyncHandler(sendRequest));
-
-// requestId-based - borrower acts on their own request
-router.post("/requests/:requestId/withdraw", requireAuth, asyncHandler(withdrawRequest));
-router.post("/requests/:requestId/cancel", requireAuth, asyncHandler(cancelReservation));
-
-// requestId-based - donor acts on an incoming request
-router.post("/requests/:requestId/accept", requireAuth, asyncHandler(acceptRequest));
-router.post("/requests/:requestId/decline", requireAuth, asyncHandler(declineRequest));
+router.post("/:id/withdraw", requireAuth, idParamValidator, validate, asyncHandler(withdrawRequest));
+router.post("/:id/accept", requireAuth, idParamValidator, validate, asyncHandler(acceptRequest));
+router.post("/:id/decline", requireAuth, idParamValidator, validate, asyncHandler(declineRequest));
+router.post("/:id/cancel", requireAuth, idParamValidator, validate, asyncHandler(cancelReservation));
+router.post("/:id/receive", requireAuth, idParamValidator, validate, asyncHandler(receiveBook));
 
 export default router;

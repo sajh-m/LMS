@@ -106,6 +106,25 @@
   border-radius: 2px;
 }
 
+.card-donor-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--stamp);
+}
+
+.card-donor-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  border-top: 1px dashed var(--line);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #4a453e;
+}
+
 @media (max-width: 480px) {
   .card {
     width: 100%;

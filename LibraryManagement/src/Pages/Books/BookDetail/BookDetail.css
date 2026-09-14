@@ -270,3 +270,87 @@
   color: var(--brass);
   margin: 0.4rem 0;
 }
+
+.admin-donor-info {
+  background: #fff;
+  border: 1px solid var(--brass);
+  border-radius: 2px;
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+}
+
+.admin-donor-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--brass);
+  margin-bottom: 0.5rem;
+}
+
+.view-requests-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--paper);
+  border: 1px solid var(--brass);
+  color: var(--ink);
+  padding: 0.75rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  margin-bottom: 0.75rem;
+  transition: background 0.15s ease;
+}
+
+.view-requests-btn:hover {
+  background: #f0ead9;
+}
+
+.requester-carousel {
+  margin: 0.75rem 0;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--line);
+}
+
+.requester-carousel-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.requester-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 0.75rem 1rem;
+}
+
+.carousel-nav-btn {
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.carousel-nav-btn:disabled {
+  background: #8a8477;
+  cursor: default;
+}
+
+.admin-actions-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
