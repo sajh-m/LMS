@@ -8,7 +8,7 @@ import { donateBookValidator, updateBookValidator, idParamValidator } from "../v
 import {
   getBooks, getBookById, donateBook, updateBook, deleteBook,
   sendRequest, withdrawRequest, acceptRequest, declineRequest,
-  cancelReservation, receiveBook, getMyDonations, getMyReservation,
+  receiveBook, getMyDonations, getMyReservation,
 } from "../controllers/bookController.js";
 
 const router = express.Router();
@@ -28,7 +28,8 @@ router.post("/:id/request", requireAuth, idParamValidator, validate, asyncHandle
 router.post("/:id/withdraw", requireAuth, idParamValidator, validate, asyncHandler(withdrawRequest));
 router.post("/:id/accept", requireAuth, idParamValidator, validate, asyncHandler(acceptRequest));
 router.post("/:id/decline", requireAuth, idParamValidator, validate, asyncHandler(declineRequest));
-router.post("/:id/cancel", requireAuth, idParamValidator, validate, asyncHandler(cancelReservation));
+// NOTE: no borrower-facing /:id/cancel route anymore - once accepted,
+// only /api/admin/books/:id/cancel (admin-only) can reverse it.
 router.post("/:id/receive", requireAuth, idParamValidator, validate, asyncHandler(receiveBook));
 
 export default router;

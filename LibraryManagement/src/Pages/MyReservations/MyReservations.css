@@ -12,11 +12,18 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 1rem;
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: 2px;
-  padding: 1rem 1.25rem;
-  margin-bottom: 0.75rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.reservation-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
 }
 
 .reservation-location {
@@ -64,16 +71,29 @@
   flex-shrink: 0;
 }
 
+
 .received-btn {
-  background: var(--ink);
-  color: var(--paper);
-  border: none;
-  padding: 0.5rem 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: fit-content;
+  background: transparent;
+  border: 1px solid var(--brass);
+  color: var(--ink);
+  padding: 0.55rem 1rem;
+  margin-top: 0.75rem;
   font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.received-btn:hover {
+  background: var(--brass);
+  color: var(--paper);
+  border-color: var(--brass);
 }
 
 .focus-banner {

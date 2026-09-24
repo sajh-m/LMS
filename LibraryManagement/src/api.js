@@ -57,9 +57,6 @@ export const api = {
   declineRequest: (bookId) =>
     request(`/books/${bookId}/decline`, { method: "POST" }),
 
-  cancelReservation: (bookId) =>
-    request(`/books/${bookId}/cancel`, { method: "POST" }),
-
   receiveBook: (bookId) =>
     request(`/books/${bookId}/receive`, { method: "POST" }),
 

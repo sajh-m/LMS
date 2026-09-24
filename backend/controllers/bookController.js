@@ -109,14 +109,6 @@ export async function declineRequest(req, res) {
   res.status(200).json({ message: "Request declined" });
 }
 
-// Borrower only - donor is never allowed to cancel an active reservation
-export async function cancelReservation(req, res) {
-  const result = await BookService.cancelReservation(req.params.id, req.userId);
-  if (result.status === "not_found") return res.status(404).json({ message: "not found" });
-  if (result.status === "forbidden") return res.status(403).json({ message: "not your reservation" });
-  res.status(200).json({ message: "Reservation cancelled" });
-}
-
 // Borrower confirms physical handoff happened - completes and deletes
 export async function receiveBook(req, res) {
   const result = await BookService.receiveBook(req.params.id, req.userId);

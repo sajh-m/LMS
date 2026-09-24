@@ -35,7 +35,10 @@ function shapeBorrower(book) {
   return book;
 }
 function shapeDonorForBorrowerView(book) {
-  if (book.donor && book.status === "pending") {
+  // The borrower NEVER gets the donor's email/phone, even after
+  // acceptance - only the donor's name. The donor initiates contact
+  // using the borrower's info, not the other way around.
+  if (book.donor) {
     book.donor = { id: book.donor.id, name: book.donor.name };
   }
   return book;
@@ -221,30 +224,10 @@ export const BookService = {
     return { status: "ok" };
   },
 
-  // Once RESERVED, the donor cannot back out unilaterally - only the
-  // borrower (this function) or an admin (adminCancelReservation) can
-  // end it. This function is only ever reachable via the borrower's own
-  // route, so ownership doubles as the enforcement.
-  cancelReservation: async (id, borrowerId) => {
-    const entry = await Donation.findByPk(id);
-    if (!entry) return { status: "not_found" };
-    if (entry.status !== "reserved" || entry.borrowerId !== borrowerId) return { status: "forbidden" };
-
-    const donorUser = await User.findByPk(entry.donorId, { attributes: ["id", "name", "email"] });
-    const borrowerUser = await User.findByPk(borrowerId, { attributes: ["id", "name", "email"] });
-    await AuditService.log("reservation_cancelled_by_borrower", { donation: entry, donorUser, borrowerUser });
-
-    entry.status = "available";
-    entry.borrowerId = null;
-    await entry.save();
-
-    await NotificationService.create(
-      entry.donorId,
-      `${borrowerUser.name} cancelled their reservation for "${entry.title}". It's available again.`,
-    );
-
-    return { status: "ok" };
-  },
+  // Once RESERVED (accepted), NOBODY except admin can undo it - not the
+  // donor, not the borrower. The borrower's only path forward from here
+  // is receiveBook() to complete the transaction. This intentionally
+  // removes the borrower-cancel capability that used to exist.
 
   // The BORROWER confirms the book was physically handed over - this is
   // what actually completes the transaction and removes the listing.
